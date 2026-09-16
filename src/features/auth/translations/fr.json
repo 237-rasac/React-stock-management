@@ -1,0 +1,24 @@
+{
+  "title": "Connexion",
+  "subtitle": "Connectez-vous à votre compte",
+  "email": "Email",
+  "password": "Mot de passe",
+  "rememberMe": "Se souvenir de moi",
+  "forgotPassword": "Mot de passe oublié ?",
+  "loginButton": "Se connecter",
+  "registerLink": "Pas de compte ? S'inscrire",
+  "profileTitle": "Mon profil",
+  "profileInfo": "Informations personnelles",
+  "settingsTitle": "Paramètres",
+  "appearance": "Apparence",
+  "theme": "Thème",
+  "light": "Clair",
+  "dark": "Sombre",
+  "system": "Système",
+  "language": "Langue",
+  "errors": {
+    "invalidCredentials": "Email ou mot de passe incorrect",
+    "required": "Ce champ est requis",
+    "invalidEmail": "Email invalide"
+  }
+}

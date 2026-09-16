@@ -1,0 +1,24 @@
+{
+  "title": "Login",
+  "subtitle": "Sign in to your account",
+  "email": "Email",
+  "password": "Password",
+  "rememberMe": "Remember me",
+  "forgotPassword": "Forgot password?",
+  "loginButton": "Sign in",
+  "registerLink": "No account? Sign up",
+  "profileTitle": "My Profile",
+  "profileInfo": "Personal Information",
+  "settingsTitle": "Settings",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "language": "Language",
+  "errors": {
+    "invalidCredentials": "Invalid email or password",
+    "required": "This field is required",
+    "invalidEmail": "Invalid email"
+  }
+}

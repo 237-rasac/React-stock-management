@@ -1,0 +1,11 @@
+{
+  "title": "Utilisateurs",
+  "listTitle": "Liste",
+  "createTitle": "Créer",
+  "editTitle": "Modifier",
+  "detailTitle": "Détails",
+  "search": "Rechercher",
+  "filter": "Filtrer",
+  "actions": "Actions",
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+}
