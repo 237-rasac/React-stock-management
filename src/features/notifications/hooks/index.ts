@@ -1,48 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { NotificationsApi } from '../api';
-import type { RequestParams } from '@/types/api.types';
+import { useQuery } from "@tanstack/react-query";
+import { NotificationsApi } from "../api";
 
-export const useNotifications = (params?: RequestParams) => {
+/** Query-key factory. */
+export const notificationsKeys = {
+  all: ["notifications"] as const,
+  list: () => [...notificationsKeys.all, "list"] as const,
+};
+
+/**
+ * Active notifications. Polled every 60s so the Header bell stays live
+ * without sockets; refetched on window focus as a bonus.
+ */
+export const useNotifications = () => {
   return useQuery({
-    queryKey: ['notifications', params],
-    queryFn: () => NotificationsApi.getAll(params),
-  });
-};
-
-export const useNotification = (id: string) => {
-  return useQuery({
-    queryKey: ['notifications', id],
-    queryFn: () => NotificationsApi.getById(id),
-    enabled: !!id,
-  });
-};
-
-export const useMarkAsRead = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: NotificationsApi.markAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-  });
-};
-
-export const useMarkAllAsRead = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: NotificationsApi.markAllAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-  });
-};
-
-export const useDeleteNotification = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: NotificationsApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
+    queryKey: notificationsKeys.list(),
+    queryFn: () => NotificationsApi.getAll(),
+    refetchInterval: 60_000,
   });
 };

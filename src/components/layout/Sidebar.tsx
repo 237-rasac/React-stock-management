@@ -1,128 +1,203 @@
-import { NavLink, useLocation } from 'react-router';
-import { useUIStore } from '@/stores/ui.store';
-import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Boxes,
-  Package,
-  ShoppingCart,
-  Truck,
-  ShoppingBag,
-  BarChart2,
-  Bell,
-  Settings,
-  User,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-} from 'lucide-react';
+import { NavLink, useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import { langPath } from "@/lib/lang-path";
+import { useUIStore } from "@/stores/ui.store";
+import { useAuthStore } from "@/stores/auth.store";
+import { NAV_GROUPS } from "@/lib/navigation";
+import { hasAnyRole } from "@/lib/permissions";
+import { LogOut, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const navigation = [
-  { name: 'dashboard', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { name: 'companies', href: '/companies', icon: Building2, label: 'Entreprises', roles: ['ADMIN'] },
-  { name: 'users', href: '/users', icon: Users, label: 'Utilisateurs', roles: ['ADMIN'] },
-  { name: 'categories', href: '/catalog/categories', icon: Boxes, label: 'Catégories' },
-  { name: 'articles', href: '/catalog/articles', icon: Package, label: 'Articles' },
-  { name: 'customers', href: '/customers', icon: Users, label: 'Clients' },
-  { name: 'suppliers', href: '/suppliers', icon: Truck, label: 'Fournisseurs' },
-  { name: 'customerOrders', href: '/customer-orders', icon: ShoppingCart, label: 'Commandes clients' },
-  { name: 'supplierOrders', href: '/supplier-orders', icon: ShoppingBag, label: 'Commandes fournisseurs' },
-  { name: 'sales', href: '/sales', icon: BarChart2, label: 'Ventes' },
-  { name: 'stock', href: '/stock', icon: Boxes, label: 'Stock' },
-  { name: 'notifications', href: '/notifications', icon: Bell, label: 'Notifications' },
-  { name: 'settings', href: '/settings', icon: Settings, label: 'Paramètres' },
-];
+/* Sidebar-only ink tints (panel is dark-ink in BOTH themes) — referenced via
+   the --dark-* tokens so no hard-coded hexes live here:
+   base text = dark-text-secondary · icon = dark-text-muted · hover text =
+   dark-text-primary · group label = dark-primary · disabled = dark-text-disabled.
+   Active = gold 15% wash + gold-400 icon + 3px gold-500 bar on the panel edge.
+
+   Scrollbar policy (mockup §sidebar): the nav scrolls silently — no track,
+   and a hairline 5px thumb that only appears while hovering the nav. */
 
 export const Sidebar = () => {
-  const { sidebarCollapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen, toggleSidebarCollapsed } = useUIStore();
-  const location = useLocation();
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const { t } = useTranslation("common");
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
+  const closeSidebar = useUIStore((s) => s.closeSidebar);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
 
-  const handleToggle = () => {
-    if (isMobile) {
-      setSidebarOpen(!sidebarOpen);
-    } else {
-      toggleSidebarCollapsed();
-    }
+  // Navigation/role labels are DATA keys (common:layout.<labelKey>) — typed
+  // t() only accepts literal keys, so dynamic lookups go through this cast.
+  const tDynamic = t as unknown as (
+    key: string,
+    options?: Record<string, unknown>,
+  ) => string;
+
+  const fullName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    "Utilisateur";
+  const roleLabel = user?.roles?.[0]
+    ? tDynamic(`layout.role${cap(user.roles[0])}`)
+    : undefined;
+
+  const handleLogout = () => {
+    logout();
+    navigate(langPath("/login"));
   };
 
   return (
-    <aside
-      className={`
-        fixed left-0 top-0 z-50 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
-        transition-all duration-300 ease-in-out
-        ${sidebarCollapsed ? 'w-20' : 'w-72'}
-        ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
-      `}
-      aria-label="Navigation principale"
-    >
-      <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-          {!sidebarCollapsed && (
-            <NavLink to="/dashboard" className="flex items-center gap-2 font-bold text-xl text-primary">
-              <span className="text-2xl">📦</span>
-              <span>SGS</span>
-            </NavLink>
-          )}
-          <button
-            onClick={handleToggle}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label={sidebarCollapsed ? 'Étendre la barre latérale' : 'Réduire la barre latérale'}
-            aria-expanded={!sidebarCollapsed}
+    <>
+      {/* Mobile overlay */}
+      <div
+        aria-hidden="true"
+        onClick={closeSidebar}
+        className={cn(
+          "fixed inset-0 z-40 bg-[var(--dark-input)]/45 backdrop-blur-[2px] transition-opacity duration-300 nav:hidden",
+          sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      />
+
+      <aside
+        id="app-sidebar"
+        aria-label={t("layout.mainNavigation")}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col bg-primary-950 text-[var(--dark-text-secondary)]",
+          "transition-transform duration-300 ease-out",
+          "max-nav:-translate-x-full max-nav:shadow-xl",
+          "nav:translate-x-0",
+          !sidebarOpen &&
+            "max-nav:-translate-x-full max-nav:pointer-events-none",
+        )}
+      >
+        {/* Brand header */}
+        <div className="flex h-[66px] shrink-0 items-center justify-between px-5">
+          <NavLink
+            to={langPath("/dashboard")}
+            className="flex items-center gap-2.5"
+            onClick={closeSidebar}
           >
-            {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-accent-500 font-display text-[15px] font-bold text-primary-950">
+              S
+            </span>
+            <span className="font-display text-[17px] font-bold tracking-wide text-white">
+              SGS
+              <span className="ml-1.5 hidden font-mono text-[9.5px] font-normal uppercase tracking-[0.14em] text-[var(--dark-text-muted)] sm:inline">
+                {t("layout.brandSuffix")}
+              </span>
+            </span>
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto rounded-lg p-1.5 text-[var(--dark-text-muted)] transition-colors hover:bg-white/[0.08] hover:text-white nav:hidden"
+            aria-label={t("layout.closeMenu")}
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1" aria-label="Navigation">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
-            const hasAccess = !item.roles || item.roles.some((role) => true);
-
-            if (!hasAccess) return null;
+        {/* Grouped, role-filtered navigation */}
+        <nav
+          className="sb-nav flex-1 overflow-y-auto px-3 pb-4"
+          aria-label={t("layout.mainNavigation")}
+        >
+          {NAV_GROUPS.map((group) => {
+            const items = group.items.filter(
+              (item) => !item.roles || hasAnyRole(item.roles),
+            );
+            if (items.length === 0) return null;
 
             return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive: active }) => `
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
-                  ${active
-                    ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                  }
-                  ${sidebarCollapsed ? 'justify-center' : ''}
-                `}
-                title={sidebarCollapsed ? item.label : undefined}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
-              </NavLink>
+              <div key={group.labelKey}>
+                <p className="px-3 pb-[7px] pt-[17px] font-mono text-[10px] uppercase tracking-[0.13em] text-[var(--dark-primary)]">
+                  {tDynamic(`layout.${group.labelKey}`)}
+                </p>
+                <ul className="space-y-0.5">
+                  {items.map((item) => (
+                    <li key={item.key}>
+                      <NavLink
+                        to={langPath(item.href)}
+                        end={item.end}
+                        onClick={closeSidebar}
+                        className={({ isActive }) =>
+                          cn(
+                            "group relative flex items-center gap-3 rounded-[9px] px-3 py-[9px] text-[13.6px] font-medium transition-colors",
+                            isActive
+                              ? "bg-accent-500/15 text-white"
+                              : "text-[var(--dark-text-secondary)] hover:bg-white/[0.055] hover:text-white",
+                          )
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {/* Active bar on the panel edge */}
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-accent-500 transition-opacity",
+                                isActive ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            <item.icon
+                              aria-hidden="true"
+                              className={cn(
+                                "h-[17px] w-[17px] shrink-0 transition-colors",
+                                isActive
+                                  ? "text-accent-400"
+                                  : "text-[var(--dark-text-muted)] group-hover:text-[var(--dark-text-secondary)]",
+                              )}
+                            />
+                            <span className="truncate">
+                              {tDynamic(`layout.${item.labelKey}`)}
+                            </span>
+                          </>
+                        )}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <NavLink
-            to="/profile"
-            className={({ isActive }) => `
-              flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
-              ${isActive
-                ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-              }
-              ${sidebarCollapsed ? 'justify-center' : ''}
-            `}
-            title={sidebarCollapsed ? 'Profil' : undefined}
-          >
-            <User className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            {!sidebarCollapsed && <span className="font-medium">Mon profil</span>}
-          </NavLink>
+        {/* User footer */}
+        <div className="shrink-0 border-t border-white/[0.07] p-3">
+          <div className="flex items-center gap-3 rounded-[9px] px-2 py-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-[12.5px] font-bold text-primary-950">
+              {fullName
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase())
+                .join("")}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-medium text-white">
+                {fullName}
+              </p>
+              {roleLabel && (
+                <p className="truncate text-[11px] text-[var(--dark-text-disabled)]">
+                  {roleLabel}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="shrink-0 rounded-lg p-[7px] text-[var(--dark-text-disabled)] transition-colors hover:bg-white/[0.08] hover:text-white"
+              aria-label={t("layout.logout")}
+              title={t("layout.logout")}
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
+
+/** ADMIN → roleAdmin, GESTIONNAIRE → roleManager, VENDEUR → roleSeller. */
+function cap(role: string): string {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+}

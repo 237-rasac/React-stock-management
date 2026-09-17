@@ -1,11 +1,30 @@
 {
   "title": "Entreprises",
+  "subtitle": "Entreprises clientes gérées dans le système",
   "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
+  "createTitle": "Nouvelle entreprise",
+  "editTitle": "Modifier l'entreprise",
   "detailTitle": "Détails",
   "search": "Rechercher",
   "filter": "Filtrer",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+  "fields": {
+    "name": "Nom",
+    "addressLine1": "Adresse (ligne 1)",
+    "addressLine2": "Adresse (ligne 2)",
+    "city": "Ville",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "email": "Email",
+    "phone": "Téléphone"
+  },
+  "toast": {
+    "created": "Entreprise créée",
+    "updated": "Entreprise mise à jour",
+    "deleted": "Entreprise supprimée"
+  },
+  "adminOnly": "Accès réservé aux administrateurs",
+  "adminOnlyHint": "Cette section nécessite le rôle ADMIN.",
+  "addressHint": "Seul le nom est obligatoire — les autres champs sont optionnels."
 }

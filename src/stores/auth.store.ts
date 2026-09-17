@@ -1,95 +1,64 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { AuthUser, UserRole } from "@/features/auth/types";
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles: string[];
-  permissions: string[];
-  companyId?: string;
-}
-
+/**
+ * Auth store (P0.4) — the user object only.
+ *
+ * Token storage is resolved: the JWT lives ONLY in localStorage
+ * (`STORAGE_KEYS.ACCESS_TOKEN`), written by authApi.login and read by the
+ * axios interceptor. The store never holds tokens, eliminating the old
+ * dual-write (store persist + manual localStorage) that could drift.
+ *
+ * The user is persisted for instant UI hydration; /auth/me (see
+ * useAuthBootstrap) is the source of truth and overwrites it on mount.
+ */
 interface AuthState {
-  user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  /** True while the /auth/me bootstrap is in flight on app mount. */
+  isBootstrapping: boolean;
+  /** True once the bootstrap has completed (success or failure). */
+  hasBootstrapped: boolean;
 
-  setAuth: (data: { user: User; accessToken: string; refreshToken: string }) => void;
-  setUser: (user: User | null) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setUser: (user: AuthUser | null) => void;
+  setBootstrapping: (isBootstrapping: boolean) => void;
+  /** Convenience for login flows: set user + authenticated in one call. */
+  setAuth: (user: AuthUser) => void;
   logout: () => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  hasRole: (role: string) => boolean;
-  hasPermission: (permission: string) => boolean;
+
+  hasRole: (role: UserRole) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
-      isLoading: false,
-      error: null,
+      isBootstrapping: false,
+      hasBootstrapped: false,
 
-      setAuth: ({ user, accessToken, refreshToken }) => {
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('refresh_token', refreshToken);
-        localStorage.setItem('user', JSON.stringify(user));
-        set({ user, accessToken, refreshToken, isAuthenticated: true, error: null });
-      },
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
 
-      setUser: (user) => {
-        if (user) {
-          localStorage.setItem('user', JSON.stringify(user));
-        } else {
-          localStorage.removeItem('user');
-        }
-        set({ user, isAuthenticated: !!user });
-      },
+      setBootstrapping: (isBootstrapping) => set({ isBootstrapping }),
 
-      setTokens: (accessToken, refreshToken) => {
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('refresh_token', refreshToken);
-        set({ accessToken, refreshToken });
-      },
+      setAuth: (user) => set({ user, isAuthenticated: true }),
 
-      logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
-      },
+      logout: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+          isBootstrapping: false,
+          hasBootstrapped: true,
+        }),
 
-      setLoading: (isLoading) => set({ isLoading }),
-
-      setError: (error) => set({ error }),
-
-      hasRole: (role) => {
-        const { user } = get();
-        return user?.roles.includes(role) ?? false;
-      },
-
-      hasPermission: (permission) => {
-        const { user } = get();
-        return user?.permissions.includes(permission) ?? false;
-      },
+      hasRole: (role) => get().user?.roles.includes(role) ?? false,
     }),
     {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    }
-  )
+      name: "auth-storage",
+      // Only the user persists — auth flags are re-derived on bootstrap,
+      // so a stale localStorage entry can never grant a fake session.
+      partialize: (state) => ({ user: state.user }),
+    },
+  ),
 );

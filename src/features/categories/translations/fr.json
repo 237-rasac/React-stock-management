@@ -1,11 +1,22 @@
 {
   "title": "Catégories",
+  "subtitle": "Organisez votre catalogue par famille d'articles",
   "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
+  "createTitle": "Nouvelle catégorie",
+  "editTitle": "Modifier la catégorie",
   "detailTitle": "Détails",
   "search": "Rechercher",
   "filter": "Filtrer",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+  "fields": {
+    "code": "Code",
+    "designation": "Désignation"
+  },
+  "toast": {
+    "created": "Catégorie créée",
+    "updated": "Catégorie mise à jour",
+    "deleted": "Catégorie supprimée"
+  },
+  "noResults": "Aucun résultat"
 }

@@ -1,22 +1,52 @@
-import apiClient from '@/api/client';
-import type { PaginatedResponse, RequestParams } from '@/types/api.types';
-import type { Customers } from '../types';
+import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { toClientRequest, toCustomer } from "./mappers";
+import type { ClientResponseDTO, Customer, CustomerWrite } from "../types";
 
-const BASE_URL = '/customers';
-
+/**
+ * Customers API — pinned to swagger.json (backend resource: «clients»):
+ *
+ *   GET    /api/clients        → ClientResponseDTO[] (bare array)
+ *   POST   /api/clients        → ClientResponseDTO
+ *   GET    /api/clients/{id}   → ClientResponseDTO
+ *   PUT    /api/clients/{id}   → ClientResponseDTO
+ *   DELETE /api/clients/{id}
+ *
+ * Every method returns the domain `Customer`, never raw DTOs — responses are
+ * mapped (int64 id → string) and unwrapped from the Axios envelope here.
+ */
 export const CustomersApi = {
-  getAll: (params?: RequestParams) =>
-    apiClient.get<PaginatedResponse<Customers>>(`${BASE_URL}`, { params }),
+  getAll: async (): Promise<Customer[]> => {
+    const res = await apiClient.get<ClientResponseDTO[]>(
+      API_ENDPOINTS.CUSTOMERS,
+    );
+    return res.data.map(toCustomer);
+  },
 
-  getById: (id: string) =>
-    apiClient.get<Customers>(`${BASE_URL}/${id}`),
+  getById: async (id: string): Promise<Customer> => {
+    const res = await apiClient.get<ClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER(id),
+    );
+    return toCustomer(res.data);
+  },
 
-  create: (data: Partial<Customers>) =>
-    apiClient.post<Customers>(BASE_URL, data),
+  create: async (input: CustomerWrite): Promise<Customer> => {
+    const res = await apiClient.post<ClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMERS,
+      toClientRequest(input),
+    );
+    return toCustomer(res.data);
+  },
 
-  update: (id: string, data: Partial<Customers>) =>
-    apiClient.put<Customers>(`${BASE_URL}/${id}`, data),
+  update: async (id: string, input: CustomerWrite): Promise<Customer> => {
+    const res = await apiClient.put<ClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER(id),
+      toClientRequest(input),
+    );
+    return toCustomer(res.data);
+  },
 
-  delete: (id: string) =>
-    apiClient.delete(`${BASE_URL}/${id}`),
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(API_ENDPOINTS.CUSTOMER(id));
+  },
 };

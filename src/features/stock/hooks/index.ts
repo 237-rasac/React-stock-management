@@ -1,43 +1,61 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { StockApi } from '../api';
-import type { RequestParams } from '@/types/api.types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { StockApi } from "../api";
+import { toastSuccess } from "@/lib/toast";
+import type { StockAdjustmentInput, StockMovementType } from "../types";
 
-export const useStock = (params?: RequestParams) => {
+/** Query-key factory — `all` is invalidated by order lifecycle side effects too. */
+export const stockKeys = {
+  all: ["stock"] as const,
+  etat: () => [...stockKeys.all, "etat"] as const,
+  alertes: () => [...stockKeys.all, "alertes"] as const,
+  valorisation: () => [...stockKeys.all, "valorisation"] as const,
+  movements: (filters?: { articleId?: string; type?: StockMovementType }) =>
+    [...stockKeys.all, "movements", filters ?? {}] as const,
+};
+
+export const useStockEtat = () => {
   return useQuery({
-    queryKey: ['stock', params],
-    queryFn: () => StockApi.getAll(params),
+    queryKey: stockKeys.etat(),
+    queryFn: () => StockApi.getEtat(),
   });
 };
 
-export const useStockItem = (id: string) => {
+export const useStockAlertes = () => {
   return useQuery({
-    queryKey: ['stock', id],
-    queryFn: () => StockApi.getById(id),
-    enabled: !!id,
+    queryKey: stockKeys.alertes(),
+    queryFn: () => StockApi.getAlertes(),
   });
 };
 
-export const useStockMovements = (params?: RequestParams) => {
+export const useStockValorisation = () => {
   return useQuery({
-    queryKey: ['stock', 'movements', params],
-    queryFn: () => StockApi.getMovements(params),
+    queryKey: stockKeys.valorisation(),
+    queryFn: () => StockApi.getValorisation(),
   });
 };
 
-export const useStockAlerts = (params?: RequestParams) => {
+export const useStockMovements = (filters?: {
+  articleId?: string;
+  type?: StockMovementType;
+}) => {
   return useQuery({
-    queryKey: ['stock', 'alerts', params],
-    queryFn: () => StockApi.getAlerts(params),
+    queryKey: stockKeys.movements(filters),
+    queryFn: () => StockApi.getMovements(filters),
   });
 };
 
-export const useAdjustStock = () => {
+/** Manual inventory correction — refreshes every stock view (state, ledger, valuation, articles). */
+export const useCreateStockAdjustment = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("stock");
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { quantity: number; reason: string } }) =>
-      StockApi.adjust(id, data),
+    mutationFn: (input: StockAdjustmentInput) =>
+      StockApi.createAdjustment(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: stockKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toastSuccess(t("toast.adjusted"));
     },
   });
 };

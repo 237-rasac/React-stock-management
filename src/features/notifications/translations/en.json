@@ -1,11 +1,19 @@
 {
   "title": "Notifications",
-  "listTitle": "List",
-  "createTitle": "Create",
-  "editTitle": "Edit",
-  "detailTitle": "Details",
-  "search": "Search",
-  "filter": "Filter",
-  "actions": "Actions",
-  "confirmDelete": "Are you sure you want to delete this item?"
+  "subtitle": "Active system alerts",
+  "search": "Search…",
+  "empty": "No active notifications",
+  "emptyHint": "All quiet — alerts will appear here.",
+  "markAllRead": "Mark all as read",
+  "fields": {
+    "type": "Type",
+    "message": "Message",
+    "article": "Related article"
+  },
+  "type": {
+    "STOCK_BAS": "Low stock",
+    "RUPTURE": "Out of stock",
+    "ALERT": "Alert"
+  },
+  "seeAll": "See all notifications"
 }

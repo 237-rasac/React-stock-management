@@ -1,22 +1,22 @@
-import apiClient from '@/api/client';
-import type { PaginatedResponse, RequestParams } from '@/types/api.types';
-import type { Notifications } from '../types';
+import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { toNotification } from "./mappers";
+import type { AppNotification, NotificationDTO } from "../types";
 
-const BASE_URL = '/notifications';
-
+/**
+ * Notifications API — pinned to swagger.json:
+ *
+ *   GET /api/notifications → NotificationDTO[]  («notifications actives»)
+ *
+ * swagger v1.0 pins NO mark-as-read/PUT/delete operations — they were
+ * removed from this client until the backend exposes them. Returns the
+ * domain `AppNotification`, never raw DTOs.
+ */
 export const NotificationsApi = {
-  getAll: (params?: RequestParams) =>
-    apiClient.get<PaginatedResponse<Notifications>>(`${BASE_URL}`, { params }),
-
-  getById: (id: string) =>
-    apiClient.get<Notifications>(`${BASE_URL}/${id}`),
-
-  markAsRead: (id: string) =>
-    apiClient.post(`${BASE_URL}/${id}/read`),
-
-  markAllAsRead: () =>
-    apiClient.post(`${BASE_URL}/read-all`),
-
-  delete: (id: string) =>
-    apiClient.delete(`${BASE_URL}/${id}`),
+  getAll: async (): Promise<AppNotification[]> => {
+    const res = await apiClient.get<NotificationDTO[]>(
+      API_ENDPOINTS.NOTIFICATIONS,
+    );
+    return res.data.map(toNotification);
+  },
 };

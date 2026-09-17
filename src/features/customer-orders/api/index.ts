@@ -1,22 +1,60 @@
-import apiClient from '@/api/client';
-import type { PaginatedResponse, RequestParams } from '@/types/api.types';
-import type { CustomerOrders } from '../types';
+import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { toCommandeClientRequest, toCustomerOrder } from "./mappers";
+import type {
+  CommandeClientResponseDTO,
+  CustomerOrder,
+  CustomerOrderWrite,
+} from "../types";
 
-const BASE_URL = '/customer-orders';
-
+/**
+ * Customer orders API — pinned to swagger.json (backend resource: «commandes-client»):
+ *
+ *   GET    /api/commandes-client                → CommandeClientResponseDTO[] (bare array)
+ *   POST   /api/commandes-client                → CommandeClientResponseDTO (order + lines in one request, statut EN_COURS)
+ *   GET    /api/commandes-client/{id}           → CommandeClientResponseDTO
+ *   PUT    /api/commandes-client/{id}/valider   → CommandeClientResponseDTO (409 if stock insufficient)
+ *   PUT    /api/commandes-client/{id}/annuler   → CommandeClientResponseDTO (only while EN_COURS)
+ *
+ * There is no delete endpoint — cancellation is the terminal flow. Every
+ * method returns the domain `CustomerOrder`, never raw DTOs.
+ */
 export const CustomerOrdersApi = {
-  getAll: (params?: RequestParams) =>
-    apiClient.get<PaginatedResponse<CustomerOrders>>(`${BASE_URL}`, { params }),
+  getAll: async (): Promise<CustomerOrder[]> => {
+    const res = await apiClient.get<CommandeClientResponseDTO[]>(
+      API_ENDPOINTS.CUSTOMER_ORDERS,
+    );
+    return res.data.map(toCustomerOrder);
+  },
 
-  getById: (id: string) =>
-    apiClient.get<CustomerOrders>(`${BASE_URL}/${id}`),
+  getById: async (id: string): Promise<CustomerOrder> => {
+    const res = await apiClient.get<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDER(id),
+    );
+    return toCustomerOrder(res.data);
+  },
 
-  create: (data: Partial<CustomerOrders>) =>
-    apiClient.post<CustomerOrders>(BASE_URL, data),
+  create: async (input: CustomerOrderWrite): Promise<CustomerOrder> => {
+    const res = await apiClient.post<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDERS,
+      toCommandeClientRequest(input),
+    );
+    return toCustomerOrder(res.data);
+  },
 
-  update: (id: string, data: Partial<CustomerOrders>) =>
-    apiClient.put<CustomerOrders>(`${BASE_URL}/${id}`, data),
+  /** PUT /{id}/valider — generates a stock exit per line; 409 when stock is insufficient. */
+  validate: async (id: string): Promise<CustomerOrder> => {
+    const res = await apiClient.put<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDER_VALIDATE(id),
+    );
+    return toCustomerOrder(res.data);
+  },
 
-  delete: (id: string) =>
-    apiClient.delete(`${BASE_URL}/${id}`),
+  /** PUT /{id}/annuler — allowed only while the order is EN_COURS. */
+  cancel: async (id: string): Promise<CustomerOrder> => {
+    const res = await apiClient.put<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDER_CANCEL(id),
+    );
+    return toCustomerOrder(res.data);
+  },
 };

@@ -1,17 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DashboardApi } from '../api';
-import type { RequestParams } from '@/types/api.types';
+import { useQuery } from "@tanstack/react-query";
+import { DashboardApi } from "../api";
+
+/** Query-key factory for dashboard queries. */
+export const dashboardKeys = {
+  all: ["dashboard"] as const,
+  kpis: () => [...dashboardKeys.all, "kpis"] as const,
+  charts: () => [...dashboardKeys.all, "charts"] as const,
+};
 
 export const useDashboardKPIs = () => {
   return useQuery({
-    queryKey: ['dashboard', 'kpis'],
+    queryKey: dashboardKeys.kpis(),
     queryFn: () => DashboardApi.getKPIs(),
   });
 };
 
-export const useDashboardCharts = (params?: RequestParams) => {
+export const useDashboardCharts = () => {
   return useQuery({
-    queryKey: ['dashboard', 'charts', params],
-    queryFn: () => DashboardApi.getChartData(params),
+    queryKey: dashboardKeys.charts(),
+    queryFn: () => DashboardApi.getCharts(),
   });
 };

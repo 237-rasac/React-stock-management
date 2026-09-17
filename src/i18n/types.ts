@@ -1,15 +1,17 @@
-import 'i18next';
+import "i18next";
 
-declare module 'i18next' {
+declare module "i18next" {
   interface CustomTypeOptions {
-    defaultNS: 'common';
+    defaultNS: "common";
     resources: {
-      common: typeof import('./resources').globalResources.fr.common;
+      common: typeof import("./resources").globalResources.fr.common;
       auth: Record<string, string>;
       dashboard: Record<string, string>;
       articles: Record<string, string>;
       customers: Record<string, string>;
       suppliers: Record<string, string>;
+      "customer-orders": Record<string, string>;
+      "supplier-orders": Record<string, string>;
       orders: Record<string, string>;
       stock: Record<string, string>;
       sales: Record<string, string>;
@@ -21,18 +23,20 @@ declare module 'i18next' {
   }
 }
 
-export type SupportedLanguage = 'fr' | 'en';
+export type SupportedLanguage = "fr" | "en";
 export type TranslationNamespace =
-  | 'common'
-  | 'auth'
-  | 'dashboard'
-  | 'articles'
-  | 'customers'
-  | 'suppliers'
-  | 'orders'
-  | 'stock'
-  | 'sales'
-  | 'notifications'
-  | 'users'
-  | 'companies'
-  | 'categories';
+  | "common"
+  | "auth"
+  | "dashboard"
+  | "articles"
+  | "customers"
+  | "suppliers"
+  | "customer-orders"
+  | "supplier-orders"
+  | "orders"
+  | "stock"
+  | "sales"
+  | "notifications"
+  | "users"
+  | "companies"
+  | "categories";

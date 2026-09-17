@@ -1,11 +1,42 @@
 {
   "title": "Commandes fournisseurs",
+  "subtitle": "Réapprovisionnement auprès de vos fournisseurs",
   "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
-  "detailTitle": "Détails",
-  "search": "Rechercher",
-  "filter": "Filtrer",
+  "createTitle": "Nouvelle commande",
+  "detailTitle": "Détail de la commande",
+  "search": "Rechercher une commande…",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "backToList": "Retour aux commandes",
+  "notFound": "Commande introuvable",
+  "notFoundHint": "Cette commande n'existe pas ou a été supprimée.",
+  "fields": {
+    "code": "N° commande",
+    "date": "Date",
+    "supplier": "Fournisseur",
+    "status": "Statut",
+    "total": "Total",
+    "article": "Article",
+    "quantity": "Qté",
+    "unitPrice": "Prix unitaire",
+    "subTotal": "Sous-total"
+  },
+  "linesCard": "Articles commandés",
+  "linesCount_one": "{{count}} article",
+  "linesCount_other": "{{count}} articles",
+  "status": {
+    "EN_ATTENTE": "En attente",
+    "RECUE": "Reçue",
+    "ANNULEE": "Annulée"
+  },
+  "receive": "Réceptionner",
+  "receiveHint": "Génère une entrée de stock par ligne.",
+  "cancel": "Annuler la commande",
+  "receiveTitle": "Réceptionner cette commande ?",
+  "receiveConfirm": "Le stock sera incrémenté pour chaque ligne. Cette action ne peut pas être annulée.",
+  "cancelTitle": "Annuler cette commande ?",
+  "toast": {
+    "created": "Commande créée",
+    "received": "Réception créée — stock mis à jour",
+    "cancelled": "Commande annulée"
+  }
 }

@@ -1,38 +1,31 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIState {
+  /** Mobile (<900px) sidebar drawer visibility. Desktop is always visible via CSS. */
   sidebarOpen: boolean;
-  sidebarCollapsed: boolean;
   setSidebarOpen: (open: boolean) => void;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-  toggleSidebarCollapsed: () => void;
-
-  mobileMenuOpen: boolean;
-  setMobileMenuOpen: (open: boolean) => void;
-  toggleMobileMenu: () => void;
+  closeSidebar: () => void;
 
   activeModal: string | null;
   openModal: (modalId: string) => void;
   closeModal: () => void;
 
-  notifications: Array<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string }>;
-  addNotification: (notification: Omit<UIState['notifications'][0], 'id'>) => void;
+  notifications: Array<{
+    id: string;
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  }>;
+  addNotification: (
+    notification: Omit<UIState["notifications"][0], "id">,
+  ) => void;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
-  sidebarCollapsed: false,
+  sidebarOpen: false,
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-  setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
-  toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-
-  mobileMenuOpen: false,
-  setMobileMenuOpen: (mobileMenuOpen) => set({ mobileMenuOpen }),
-  toggleMobileMenu: () => set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
+  closeSidebar: () => set({ sidebarOpen: false }),
 
   activeModal: null,
   openModal: (activeModal) => set({ activeModal }),
@@ -41,7 +34,10 @@ export const useUIStore = create<UIState>((set) => ({
   notifications: [],
   addNotification: (notification) =>
     set((state) => ({
-      notifications: [...state.notifications, { ...notification, id: crypto.randomUUID() }],
+      notifications: [
+        ...state.notifications,
+        { ...notification, id: crypto.randomUUID() },
+      ],
     })),
   removeNotification: (id) =>
     set((state) => ({

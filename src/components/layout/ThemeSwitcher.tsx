@@ -1,38 +1,42 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
-import { useTheme } from '@/components/providers/ThemeProvider';
+import { Moon, Sun, Monitor } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export const ThemeSwitcher = () => {
+  const { t } = useTranslation("common");
   const { mode, setMode } = useTheme();
 
   const themes = [
-    { value: 'light', label: 'Clair', icon: Sun },
-    { value: 'dark', label: 'Sombre', icon: Moon },
-    { value: 'system', label: 'Système', icon: Monitor },
+    { value: "light", label: t("layout.themeLight"), icon: Sun },
+    { value: "dark", label: t("layout.themeDark"), icon: Moon },
+    { value: "system", label: t("layout.themeSystem"), icon: Monitor },
   ] as const;
 
   return (
     <div className="relative group">
       <button
-        className="flex items-center gap-2 p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-        aria-label="Changer de thème"
+        className="flex h-9 w-9 items-center justify-center rounded-[9px] text-content-secondary transition-colors hover:bg-surface-hover"
+        aria-label={t("layout.changeTheme")}
         aria-expanded="false"
         aria-haspopup="true"
       >
-        {mode === 'light' && <Sun className="h-5 w-5 text-yellow-500" />}
-        {mode === 'dark' && <Moon className="h-5 w-5 text-blue-400" />}
-        {mode === 'system' && <Monitor className="h-5 w-5 text-gray-500" />}
+        {mode === "light" && <Sun className="h-5 w-5 text-accent-500" />}
+        {mode === "dark" && <Moon className="h-5 w-5" />}
+        {mode === "system" && <Monitor className="h-5 w-5" />}
       </button>
 
-      <div className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+      <div className="invisible absolute right-0 top-full z-50 mt-2 w-40 translate-y-1 rounded-[14px] border border-border bg-surface py-1.5 opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
         {themes.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
             onClick={() => setMode(value)}
-            className={`flex w-full items-center gap-2 px-4 py-2 transition-colors ${mode === value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            className={`flex w-full items-center gap-2 px-4 py-2 text-[13.6px] transition-colors ${mode === value ? "bg-accent-500/15 text-content" : "text-content-secondary hover:bg-surface-hover hover:text-content"}`}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
             <span>{label}</span>
-            {mode === value && <span className="ml-auto text-primary">✓</span>}
+            {mode === value && (
+              <span className="ml-auto text-accent-500">✓</span>
+            )}
           </button>
         ))}
       </div>

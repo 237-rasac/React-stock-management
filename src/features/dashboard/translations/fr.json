@@ -1,5 +1,6 @@
 {
   "title": "Tableau de bord",
+  "eyebrow": "Vue d'ensemble",
   "listTitle": "Liste",
   "createTitle": "Créer",
   "editTitle": "Modifier",
@@ -7,5 +8,35 @@
   "search": "Rechercher",
   "filter": "Filtrer",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+  "kpi": {
+    "ordersInProgress": "Commandes en cours",
+    "revenueThisMonth": "CA ce mois-ci",
+    "supplyPending": "Réappro. en attente",
+    "articlesInAlert": "Articles en alerte"
+  },
+  "kpiError": {
+    "title": "Impossible de charger les indicateurs",
+    "message": "Les KPI du tableau de bord n'ont pas pu être récupérés."
+  },
+  "salesChart": {
+    "title": "Ventes des 7 derniers jours",
+    "posLink": "Point de vente",
+    "empty": "Aucune donnée de vente pour les 7 derniers jours."
+  },
+  "recentOrders": {
+    "title": "Commandes récentes",
+    "empty": "Aucune commande client pour l'instant."
+  },
+  "stockDonut": {
+    "title": "Valeur du stock par catégorie",
+    "totalLabel": "Valeur totale",
+    "empty": "Aucune donnée de stock pour le moment."
+  },
+  "stockAlerts": {
+    "title": "Alertes stock bas",
+    "empty": "Aucune alerte — tous les articles sont au-dessus du seuil.",
+    "critical": "Critique",
+    "low": "Stock bas"
+  }
 }

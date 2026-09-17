@@ -1,11 +1,19 @@
 {
   "title": "Notifications",
-  "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
-  "detailTitle": "Détails",
-  "search": "Rechercher",
-  "filter": "Filtrer",
-  "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "subtitle": "Alertes actives du système",
+  "search": "Rechercher…",
+  "empty": "Aucune notification active",
+  "emptyHint": "Tout est calme — les alertes apparaîtront ici.",
+  "markAllRead": "Tout marquer comme lu",
+  "fields": {
+    "type": "Type",
+    "message": "Message",
+    "article": "Article concerné"
+  },
+  "type": {
+    "STOCK_BAS": "Stock bas",
+    "RUPTURE": "Rupture de stock",
+    "ALERT": "Alerte"
+  },
+  "seeAll": "Voir toutes les notifications"
 }

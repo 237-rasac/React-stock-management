@@ -1,83 +1,128 @@
-import { Menu, Bell, Moon, Sun, LogOut, User, ChevronDown } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth.store';
-import { useUIStore } from '@/stores/ui.store';
-import { ThemeSwitcher } from './ThemeSwitcher';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { Menu, Bell, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { useNavigate, Link } from "react-router";
+import { useTranslation } from "react-i18next";
+import { useAuthStore } from "@/stores/auth.store";
+import { langPath } from "@/lib/lang-path";
+import { useUIStore } from "@/stores/ui.store";
+import { useNotifications } from "@/features/notifications/hooks";
+import { ThemeSwitcher } from "./ThemeSwitcher";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { GlobalSearch } from "./GlobalSearch";
+import { Avatar } from "@/components/ui/Avatar";
+
+/* Mockup topbar (§topbar): 66px, blurred surface, 1px border, hamburger <900px.
+   Control order = mockup: hamburger · search (left) · spacer · language ·
+   theme · entreprise pill · bell · avatar menu.
+   Role-filtered entries — VENDEUR only sees "Profil". */
 
 export const Header = () => {
+  const { t } = useTranslation("common");
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { setMobileMenuOpen, mobileMenuOpen } = useUIStore();
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
 
   const handleLogout = () => {
     logout();
-    setMobileMenuOpen(false);
+    navigate(langPath("/login"));
+  };
+
+  const fullName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+    "Utilisateur";
+  const canManage =
+    user?.roles?.includes("ADMIN") || user?.roles?.includes("GESTIONNAIRE");
+
+  const roleNames: Record<string, string> = {
+    ADMIN: t("layout.roleAdmin"),
+    GESTIONNAIRE: t("layout.roleManager"),
+    VENDEUR: t("layout.roleSeller"),
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-      <div className="flex h-full items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Ouvrir le menu"
-            aria-expanded={mobileMenuOpen}
-          >
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
+    <header className="fixed inset-x-0 top-0 z-30 h-[66px] border-b border-border bg-surface/85 backdrop-blur-[10px] nav:left-[264px]">
+      <div className="flex h-full items-center gap-3.5 px-4 md:px-7">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-content-secondary transition-colors hover:bg-surface-hover nav:hidden"
+          aria-label={t("layout.openMenu")}
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </button>
+
+        {/* Mockup `.tb-search`: pinned to the left of the topbar (after the
+            hamburger), fixed max-width, spacer pushes controls right. */}
+        <div className="w-full max-w-full flex-1 min-w-0 sm:max-w-[420px] sm:flex-none">
+          <GlobalSearch />
         </div>
 
-        <div className="flex items-center gap-4">
-          <ThemeSwitcher />
+        <div className="ml-auto flex items-center gap-1">
           <LanguageSwitcher />
+          <ThemeSwitcher />
+          <NotificationBell />
 
-          <div className="relative">
+          <div className="group relative">
             <button
-              className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Notifications"
-            >
-              <Bell className="h-6 w-6" aria-hidden="true" />
-              <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
-                3
-              </span>
-            </button>
-          </div>
-
-          <div className="relative group">
-            <button
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-expanded="false"
+              type="button"
+              className="flex items-center gap-2 rounded-[9px] p-1.5 transition-colors hover:bg-surface-hover"
               aria-haspopup="true"
             >
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" aria-hidden="true" />
-              </div>
-              <span className="hidden lg:block font-medium text-gray-700 dark:text-gray-300">
-                {user?.firstName} {user?.lastName}
+              <Avatar name={fullName} size="sm" />
+              <span className="hidden max-w-[160px] truncate text-[13px] font-medium text-content lg:block">
+                {fullName}
               </span>
-              <ChevronDown className="h-4 w-4 text-gray-500" aria-hidden="true" />
+              <ChevronDown
+                className="hidden h-4 w-4 text-content-muted sm:block"
+                aria-hidden="true"
+              />
             </button>
 
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <p className="font-medium text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+            <div className="invisible absolute right-0 top-full z-50 mt-2 w-56 translate-y-1 rounded-[14px] border border-border bg-surface py-1.5 opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+              <div className="border-b border-border px-4 py-2.5">
+                <p className="truncate text-sm font-medium text-content">
+                  {fullName}
+                </p>
+                <p className="truncate text-xs text-content-muted">
+                  {user?.email}
+                </p>
               </div>
-              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <User className="h-4 w-4" aria-hidden="true" />
-                Profil
-              </button>
-              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <Moon className="h-4 w-4" aria-hidden="true" />
-                Apparence
-              </button>
-              <hr className="my-1 border-gray-200 dark:border-gray-700" />
+
               <button
+                type="button"
+                onClick={() => navigate(langPath("/profile"))}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-[13.6px] text-content-secondary transition-colors hover:bg-surface-hover hover:text-content"
+              >
+                <User className="h-4 w-4" aria-hidden="true" />
+                {t("layout.profile")}
+              </button>
+
+              {canManage && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => navigate(langPath("/settings"))}
+                    className="flex w-full items-center gap-2.5 px-4 py-2 text-[13.6px] text-content-secondary transition-colors hover:bg-surface-hover hover:text-content"
+                  >
+                    <Settings className="h-4 w-4" aria-hidden="true" />
+                    {t("layout.settings")}
+                  </button>
+                  <p className="px-4 pb-1.5 pt-1.5 font-mono text-[10px] uppercase tracking-[0.13em] text-content-muted">
+                    {user?.roles
+                      ?.map((role) => roleNames[role] ?? role)
+                      .join(", ")}
+                  </p>
+                </>
+              )}
+
+              <hr className="my-1 border-border" />
+
+              <button
+                type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-[13.6px] text-danger-500 transition-colors hover:bg-danger-100/60 dark:hover:bg-danger-500/10"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                Déconnexion
+                {t("layout.logout")}
               </button>
             </div>
           </div>
@@ -86,3 +131,74 @@ export const Header = () => {
     </header>
   );
 };
+
+/** Header bell (P6.3) — live active-notification count + hover dropdown. */
+function NotificationBell() {
+  const { t } = useTranslation("common");
+  const { data } = useNotifications();
+  const notifications = data ?? [];
+  const count = notifications.length;
+  const recent = notifications.slice(0, 5);
+
+  return (
+    <div className="group relative">
+      <Link
+        to={langPath("/notifications")}
+        className="relative flex h-9 w-9 items-center justify-center rounded-[9px] text-content-secondary transition-colors hover:bg-surface-hover"
+        aria-label={t("layout.notificationsCount", { count })}
+      >
+        <Bell className="h-5 w-5" aria-hidden="true" />
+        {count > 0 && (
+          <span
+            aria-hidden="true"
+            className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger-500 px-1 text-[10px] font-bold text-white"
+          >
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+      </Link>
+
+      {/* Hover dropdown of the last N active notifications (same pattern as the user menu). */}
+      <div className="invisible absolute right-0 top-full z-50 mt-2 w-80 translate-y-1 rounded-[14px] border border-border bg-surface py-1.5 opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+        <p className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-content-muted">
+          {t("layout.notifications")}
+        </p>
+        {count === 0 ? (
+          <p className="px-4 py-4 text-center text-[13px] text-content-muted">
+            —
+          </p>
+        ) : (
+          <ul className="max-h-64 overflow-y-auto">
+            {recent.map((n) => (
+              <li key={`${n.type}-${n.articleId ?? "x"}-${n.message}`}>
+                <Link
+                  to={
+                    n.articleId
+                      ? langPath(`/catalog/articles/${n.articleId}`)
+                      : langPath("/notifications")
+                  }
+                  className="block px-4 py-2.5 transition-colors hover:bg-surface-hover"
+                >
+                  <p className="truncate text-[13px] font-medium text-content">
+                    {n.message}
+                  </p>
+                  {n.articleDesignation && (
+                    <p className="truncate text-xs text-content-muted">
+                      {n.articleDesignation}
+                    </p>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Link
+          to={langPath("/notifications")}
+          className="block border-t border-border px-4 py-2 text-center text-xs font-medium text-primary hover:underline"
+        >
+          {t("seeAll")}
+        </Link>
+      </div>
+    </div>
+  );
+}

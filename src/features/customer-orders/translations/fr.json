@@ -1,11 +1,43 @@
 {
-  "title": "Commandes clients",
+  "title": "Commandes client",
+  "subtitle": "Commandes passées par vos clients",
   "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
-  "detailTitle": "Détails",
-  "search": "Rechercher",
-  "filter": "Filtrer",
+  "createTitle": "Nouvelle commande",
+  "detailTitle": "Détail de la commande",
+  "search": "Rechercher une commande…",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "backToList": "Retour aux commandes",
+  "notFound": "Commande introuvable",
+  "notFoundHint": "Cette commande n'existe pas ou a été supprimée.",
+  "fields": {
+    "code": "N° commande",
+    "date": "Date",
+    "customer": "Client",
+    "status": "Statut",
+    "total": "Total",
+    "article": "Article",
+    "quantity": "Qté",
+    "unitPrice": "Prix unitaire",
+    "subTotal": "Sous-total"
+  },
+  "linesCard": "Articles commandés",
+  "linesCount_one": "{{count}} article",
+  "linesCount_other": "{{count}} articles",
+  "status": {
+    "EN_COURS": "En cours",
+    "VALIDEE": "Validée",
+    "ANNULEE": "Annulée"
+  },
+  "validate": "Valider la commande",
+  "validateHint": "Génère une sortie de stock par ligne.",
+  "cancel": "Annuler la commande",
+  "cancelHint": "Possible uniquement tant que la commande est en cours.",
+  "cancelTitle": "Annuler cette commande ?",
+  "validateTitle": "Valider cette commande ?",
+  "validateConfirm": "Le stock sera décrémenté pour chaque ligne. Cette action ne peut pas être annulée.",
+  "toast": {
+    "created": "Commande créée",
+    "validated": "Commande validée — stock mis à jour",
+    "cancelled": "Commande annulée"
+  }
 }

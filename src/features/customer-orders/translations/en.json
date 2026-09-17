@@ -1,11 +1,43 @@
 {
-  "title": "Customer Orders",
+  "title": "Customer orders",
+  "subtitle": "Orders placed by your customers",
   "listTitle": "List",
-  "createTitle": "Create",
-  "editTitle": "Edit",
-  "detailTitle": "Details",
-  "search": "Search",
-  "filter": "Filter",
+  "createTitle": "New order",
+  "detailTitle": "Order details",
+  "search": "Search an order…",
   "actions": "Actions",
-  "confirmDelete": "Are you sure you want to delete this item?"
+  "backToList": "Back to orders",
+  "notFound": "Order not found",
+  "notFoundHint": "This order does not exist or has been deleted.",
+  "fields": {
+    "code": "Order no.",
+    "date": "Date",
+    "customer": "Customer",
+    "status": "Status",
+    "total": "Total",
+    "article": "Article",
+    "quantity": "Qty",
+    "unitPrice": "Unit price",
+    "subTotal": "Subtotal"
+  },
+  "linesCard": "Ordered items",
+  "linesCount_one": "{{count}} item",
+  "linesCount_other": "{{count}} items",
+  "status": {
+    "EN_COURS": "In progress",
+    "VALIDEE": "Validated",
+    "ANNULEE": "Cancelled"
+  },
+  "validate": "Validate order",
+  "validateHint": "Generates a stock exit per line.",
+  "cancel": "Cancel order",
+  "cancelHint": "Only possible while the order is in progress.",
+  "cancelTitle": "Cancel this order?",
+  "validateTitle": "Validate this order?",
+  "validateConfirm": "Stock will be decremented for each line. This action cannot be undone.",
+  "toast": {
+    "created": "Order created",
+    "validated": "Order validated — stock updated",
+    "cancelled": "Order cancelled"
+  }
 }

@@ -1,11 +1,36 @@
 {
   "title": "Utilisateurs",
+  "subtitle": "Comptes de votre entreprise et leurs rôles",
   "listTitle": "Liste",
-  "createTitle": "Créer",
-  "editTitle": "Modifier",
+  "createTitle": "Nouvel utilisateur",
+  "editTitle": "Modifier l'utilisateur",
   "detailTitle": "Détails",
-  "search": "Rechercher",
+  "search": "Rechercher un utilisateur…",
   "filter": "Filtrer",
   "actions": "Actions",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  "confirmDelete": "Supprimer cet utilisateur ?",
+  "selfDelete": "Vous ne pouvez pas supprimer votre propre compte.",
+  "adminOnly": "Accès réservé aux administrateurs",
+  "adminOnlyHint": "Cette section nécessite le rôle ADMIN.",
+  "fields": {
+    "login": "Login",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "role": "Rôle",
+    "password": "Mot de passe",
+    "passwordHint": "6 caractères minimum — communiqué à l'utilisateur"
+  },
+  "role": {
+    "ADMIN": "Administrateur",
+    "GESTIONNAIRE": "Gestionnaire",
+    "VENDEUR": "Vendeur"
+  },
+  "you": "vous",
+  "toast": {
+    "created": "Utilisateur créé",
+    "updated": "Utilisateur mis à jour",
+    "deleted": "Utilisateur supprimé"
+  }
 }

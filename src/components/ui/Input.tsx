@@ -1,54 +1,111 @@
-import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
-import { cn } from '@/lib/utils';
+import {
+  forwardRef,
+  InputHTMLAttributes,
+  ReactNode,
+  TextareaHTMLAttributes,
+  SelectHTMLAttributes,
+} from "react";
+import { cn } from "@/lib/utils";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
+  /** Decorative icon rendered inside the field's leading edge (adds left padding). */
+  leadingIcon?: ReactNode;
+  /** Interactive element rendered inside the field's trailing edge (adds right padding) — e.g. a password reveal button. */
+  trailing?: ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+  (
+    {
+      className,
+      label,
+      error,
+      helperText,
+      leadingIcon,
+      trailing,
+      id,
+      ...props
+    },
+    ref,
+  ) => {
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label
+            htmlFor={inputId}
+            className="mb-1.5 block text-sm font-medium text-content-secondary"
+          >
             {label}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-            'placeholder:text-gray-400 dark:placeholder:text-gray-500',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
-            'disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed',
-            error ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 dark:border-gray-600',
-            className
+        <div className="relative">
+          {leadingIcon && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-content-disabled [&_svg]:h-[17px] [&_svg]:w-[17px]"
+            >
+              {leadingIcon}
+            </span>
           )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-          {...props}
-        />
+          <input
+            ref={ref}
+            id={inputId}
+            className={cn(
+              "w-full rounded-sm border bg-surface px-3 py-2 text-content dark:bg-[color:var(--dark-input)] dark:text-[color:var(--dark-text-primary)]",
+              "placeholder:text-content-disabled",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+              "disabled:cursor-not-allowed disabled:bg-surface-alt",
+              leadingIcon && "pl-[38px]",
+              trailing && "pr-[42px]",
+              error
+                ? "border-danger-500 focus:ring-danger-500/20"
+                : "border-border-strong dark:border-[color:var(--dark-border)]",
+              className,
+            )}
+            aria-invalid={error ? "true" : "false"}
+            aria-describedby={
+              error
+                ? `${inputId}-error`
+                : helperText
+                  ? `${inputId}-helper`
+                  : undefined
+            }
+            {...props}
+          />
+          {trailing && (
+            <div className="absolute right-[7px] top-1/2 -translate-y-1/2">
+              {trailing}
+            </div>
+          )}
+        </div>
         {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+          <p
+            id={`${inputId}-error`}
+            className="mt-1.5 text-sm text-danger-600 dark:text-danger-500"
+            role="alert"
+          >
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${inputId}-helper`} className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <p
+            id={`${inputId}-helper`}
+            className="mt-1.5 text-sm text-content-muted"
+          >
             {helperText}
           </p>
         )}
       </div>
     );
-  }
+  },
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -58,12 +115,15 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label
+            htmlFor={inputId}
+            className="mb-1.5 block text-sm font-medium text-content-secondary"
+          >
             {label}
           </label>
         )}
@@ -71,33 +131,48 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-            'placeholder:text-gray-400 dark:placeholder:text-gray-500',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
-            'disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed',
-            error ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 dark:border-gray-600',
-            className
+            "w-full rounded-sm border bg-surface px-3 py-2 text-content dark:bg-[color:var(--dark-input)] dark:text-[color:var(--dark-text-primary)]",
+            "placeholder:text-content-disabled",
+            "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+            "disabled:cursor-not-allowed disabled:bg-surface-alt",
+            error
+              ? "border-danger-500 focus:ring-danger-500/20"
+              : "border-border-strong dark:border-[color:var(--dark-border)]",
+            className,
           )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={
+            error
+              ? `${inputId}-error`
+              : helperText
+                ? `${inputId}-helper`
+                : undefined
+          }
           {...props}
         />
         {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+          <p
+            id={`${inputId}-error`}
+            className="mt-1.5 text-sm text-danger-600 dark:text-danger-500"
+            role="alert"
+          >
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${inputId}-helper`} className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <p
+            id={`${inputId}-helper`}
+            className="mt-1.5 text-sm text-content-muted"
+          >
             {helperText}
           </p>
         )}
       </div>
     );
-  }
+  },
 );
 
-Textarea.displayName = 'Textarea';
+Textarea.displayName = "Textarea";
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -108,13 +183,19 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, helperText, id, options, placeholder, ...props }, ref) => {
-    const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
+  (
+    { className, label, error, helperText, id, options, placeholder, ...props },
+    ref,
+  ) => {
+    const selectId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label
+            htmlFor={selectId}
+            className="mb-1.5 block text-sm font-medium text-content-secondary"
+          >
             {label}
           </label>
         )}
@@ -122,14 +203,22 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={selectId}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
-            'disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed',
-            error ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 dark:border-gray-600',
-            className
+            "w-full px-3 py-2 rounded-sm border bg-surface dark:bg-[color:var(--dark-input)] text-content dark:text-[color:var(--dark-text-primary)]",
+            "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+            "disabled:cursor-not-allowed disabled:bg-surface-alt",
+            error
+              ? "border-danger-500 focus:ring-danger-500/20"
+              : "border-border-strong dark:border-[color:var(--dark-border)]",
+            className,
           )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={
+            error
+              ? `${selectId}-error`
+              : helperText
+                ? `${selectId}-helper`
+                : undefined
+          }
           {...props}
         >
           {placeholder && (
@@ -144,18 +233,25 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p id={`${selectId}-error`} className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+          <p
+            id={`${selectId}-error`}
+            className="mt-1.5 text-sm text-danger-600 dark:text-danger-500"
+            role="alert"
+          >
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${selectId}-helper`} className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <p
+            id={`${selectId}-helper`}
+            className="mt-1.5 text-sm text-content-muted"
+          >
             {helperText}
           </p>
         )}
       </div>
     );
-  }
+  },
 );
 
-Select.displayName = 'Select';
+Select.displayName = "Select";

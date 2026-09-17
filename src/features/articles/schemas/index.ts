@@ -1,7 +1,34 @@
-import { z } from 'zod';
+import { z } from "zod";
 
+/**
+ * Articles form schema — mirrors swagger `ArticleRequestDTO`
+ * (required: codeArticle, designation, prixUnitaireHt, tauxTva, categorieId).
+ * Messages in French to match the auth/categories schema convention.
+ */
 export const ArticlesSchema = z.object({
-  id: z.string().optional(),
+  code: z
+    .string()
+    .min(1, "Le code est obligatoire")
+    .max(50, "Le code ne peut dépasser 50 caractères"),
+  designation: z
+    .string()
+    .min(1, "La désignation est obligatoire")
+    .max(255, "La désignation ne peut dépasser 255 caractères"),
+  unitPriceHt: z
+    .number("Le prix unitaire HT est obligatoire")
+    .positive("Le prix unitaire HT doit être positif"),
+  // Decimal fraction (0.2 = 20%); the mapper converts to the wire percentage (×100).
+  vatRate: z
+    .number("Le taux de TVA est obligatoire")
+    .min(0, "Le taux de TVA doit être positif")
+    .max(1, "Le taux de TVA doit être inférieur à 1"),
+  photo: z.string().url("URL invalide").optional(),
+  minStock: z
+    .number("Le seuil minimum est obligatoire")
+    .int("Le seuil doit être un entier")
+    .min(0, "Le seuil doit être positif")
+    .optional(),
+  categoryId: z.string().regex(/^\d+$/, "La catégorie est obligatoire"),
 });
 
 export type ArticlesFormData = z.infer<typeof ArticlesSchema>;

@@ -1,22 +1,53 @@
-import apiClient from '@/api/client';
-import type { PaginatedResponse, RequestParams } from '@/types/api.types';
-import type { Companies } from '../types';
+import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { toCompany, toEntrepriseRequest } from "./mappers";
+import type { Company, CompanyWrite, EntrepriseResponseDTO } from "../types";
 
-const BASE_URL = '/companies';
-
+/**
+ * Companies API — pinned to swagger.json (backend resource: «entreprises»):
+ *
+ *   GET    /api/entreprises        → EntrepriseResponseDTO[] (bare array)
+ *   POST   /api/entreprises        → EntrepriseResponseDTO
+ *   GET    /api/entreprises/{id}   → EntrepriseResponseDTO
+ *   PUT    /api/entreprises/{id}   → EntrepriseResponseDTO
+ *   DELETE /api/entreprises/{id}
+ *
+ * Every method returns the domain `Company`, never raw DTOs — responses are
+ * mapped (int64 id → string) and unwrapped from the Axios envelope here.
+ */
 export const CompaniesApi = {
-  getAll: (params?: RequestParams) =>
-    apiClient.get<PaginatedResponse<Companies>>(`${BASE_URL}`, { params }),
+  /** No query params in swagger v1.0 — the backend returns every company (bare array). */
+  getAll: async (): Promise<Company[]> => {
+    const res = await apiClient.get<EntrepriseResponseDTO[]>(
+      API_ENDPOINTS.COMPANIES,
+    );
+    return res.data.map(toCompany);
+  },
 
-  getById: (id: string) =>
-    apiClient.get<Companies>(`${BASE_URL}/${id}`),
+  getById: async (id: string): Promise<Company> => {
+    const res = await apiClient.get<EntrepriseResponseDTO>(
+      API_ENDPOINTS.COMPANY(id),
+    );
+    return toCompany(res.data);
+  },
 
-  create: (data: Partial<Companies>) =>
-    apiClient.post<Companies>(BASE_URL, data),
+  create: async (data: CompanyWrite): Promise<Company> => {
+    const res = await apiClient.post<EntrepriseResponseDTO>(
+      API_ENDPOINTS.COMPANIES,
+      toEntrepriseRequest(data),
+    );
+    return toCompany(res.data);
+  },
 
-  update: (id: string, data: Partial<Companies>) =>
-    apiClient.put<Companies>(`${BASE_URL}/${id}`, data),
+  update: async (id: string, data: CompanyWrite): Promise<Company> => {
+    const res = await apiClient.put<EntrepriseResponseDTO>(
+      API_ENDPOINTS.COMPANY(id),
+      toEntrepriseRequest(data),
+    );
+    return toCompany(res.data);
+  },
 
-  delete: (id: string) =>
-    apiClient.delete(`${BASE_URL}/${id}`),
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(API_ENDPOINTS.COMPANY(id));
+  },
 };

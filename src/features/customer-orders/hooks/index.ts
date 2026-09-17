@@ -1,17 +1,26 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CustomerOrdersApi } from '../api';
-import type { RequestParams } from '@/types/api.types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { CustomerOrdersApi } from "../api";
+import { toastSuccess } from "@/lib/toast";
+import type { CustomerOrderWrite } from "../types";
 
-export const useCustomerOrders = (params?: RequestParams) => {
+/** Query-key factory — `all` covers orders + lifecycle side effects on detail queries. */
+export const customerOrdersKeys = {
+  all: ["customer-orders"] as const,
+  list: () => [...customerOrdersKeys.all, "list"] as const,
+  detail: (id: string) => [...customerOrdersKeys.all, "detail", id] as const,
+};
+
+export const useCustomerOrders = () => {
   return useQuery({
-    queryKey: ['customer-orders', params],
-    queryFn: () => CustomerOrdersApi.getAll(params),
+    queryKey: customerOrdersKeys.list(),
+    queryFn: () => CustomerOrdersApi.getAll(),
   });
 };
 
 export const useCustomerOrder = (id: string) => {
   return useQuery({
-    queryKey: ['customer-orders', id],
+    queryKey: customerOrdersKeys.detail(id),
     queryFn: () => CustomerOrdersApi.getById(id),
     enabled: !!id,
   });
@@ -19,33 +28,47 @@ export const useCustomerOrder = (id: string) => {
 
 export const useCreateCustomerOrder = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("customer-orders");
   return useMutation({
-    mutationFn: CustomerOrdersApi.create,
+    mutationFn: (input: CustomerOrderWrite) => CustomerOrdersApi.create(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+      queryClient.invalidateQueries({ queryKey: customerOrdersKeys.all });
+      toastSuccess(t("toast.created"));
     },
   });
 };
 
-export const useUpdateCustomerOrder = () => {
+/** PUT /{id}/valider — stock exits happen server-side; stock queries are invalidated. */
+export const useValidateCustomerOrder = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("customer-orders");
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CustomerOrders> }) =>
-      CustomerOrdersApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+    mutationFn: CustomerOrdersApi.validate,
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: customerOrdersKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: customerOrdersKeys.detail(order.id),
+      });
+      // Server-side side effect: stock exits per line.
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toastSuccess(t("toast.validated"));
     },
   });
 };
 
-export const useDeleteCustomerOrder = () => {
+/** PUT /{id}/annuler — only while EN_COURS. */
+export const useCancelCustomerOrder = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("customer-orders");
   return useMutation({
-    mutationFn: CustomerOrdersApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+    mutationFn: CustomerOrdersApi.cancel,
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: customerOrdersKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: customerOrdersKeys.detail(order.id),
+      });
+      toastSuccess(t("toast.cancelled"));
     },
   });
 };
-
-import type { CustomerOrders } from '../types';

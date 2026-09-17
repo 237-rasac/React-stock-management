@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "perf": "warn",
+    "suspicious": "warn"
+  },
+  "plugins": ["react", "unicorn", "oxc"],
+  "ignorePatterns": ["dist", "node_modules", "coverage"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/no-unstable-nested-components": "off",
+    "react/no-array-index-key": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "eslint/no-shadow": "off",
+    "react/jsx-no-constructed-context-values": "off",
+    "react/exhaustive-effect-dependencies": "off",
+    "oxc/no-map-spread": "off"
+  }
+}

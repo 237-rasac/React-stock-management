@@ -1,57 +1,49 @@
-import { extractErrorMessage, extractFieldErrors, isApiError } from '@/api/interceptors';
-import { useUIStore } from '@/stores/ui.store';
+import { isApiError } from "@/api/interceptors";
 
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public errors?: Record<string, string[]>,
-    public timestamp: string = new Date().toISOString()
-  ) {
-    super(message);
-    this.name = 'AppError';
+/**
+ * Central error handling (P1.4) — used by the react-query
+ * QueryCache/MutationCache onError hooks in app/providers.tsx so every failed
+ * query/mutation surfaces a consistent message, unless a caller opts out via
+ * mutation `meta.handled: true` (e.g. forms that map errors inline).
+ */
+
+/** Message shown to the user for any thrown error. */
+export function getErrorMessage(error: unknown): string {
+  if (isApiError(error)) {
+    if (error.status === 0)
+      return "Impossible de joindre le serveur. Vérifiez votre connexion.";
+    // The backend's own message always wins (e.g. "Stock insuffisant pour
+    // l'article X") — a hardcoded per-status string would hide it.
+    if (error.message && error.message.trim()) return error.message;
+    if (error.status === 401)
+      return "Votre session a expiré. Reconnectez-vous.";
+    if (error.status === 403)
+      return "Vous n’avez pas les droits nécessaires pour cette action.";
+    return "Une erreur inattendue est survenue";
   }
+  if (error instanceof Error && error.message) return error.message;
+  return "Une erreur inattendue est survenue";
+}
 
-  static fromApiError(error: unknown): AppError {
-    if (isApiError(error)) {
-      return new AppError(error.message, error.status, error.errors, error.timestamp);
-    }
-    if (error instanceof Error) {
-      return new AppError(error.message, 0);
-    }
-    return new AppError('Une erreur inattendue est survenue', 0);
+/** Backend field errors → flat map for RHF `setError` (e.g. { email: '...' }). */
+export function getFieldErrors(error: unknown): Record<string, string> {
+  if (isApiError(error) && error.errors) {
+    return Object.fromEntries(
+      Object.entries(error.errors).map(([field, messages]) => [
+        field,
+        messages[0],
+      ]),
+    );
   }
+  return {};
 }
 
-export function handleApiError(error: unknown, defaultMessage = 'Une erreur est survenue'): string {
-  const message = extractErrorMessage(error) || defaultMessage;
-
-  if (isApiError(error) && error.status === 401) {
-    useUIStore.getState().addNotification({
-      type: 'error',
-      message: 'Session expirée, veuillez vous reconnecter',
-    });
-  }
-
-  return message;
-}
-
-export function handleFormError(error: unknown): Record<string, string> {
-  return extractFieldErrors(error);
-}
-
-export function showErrorToast(message: string): void {
-  useUIStore.getState().addNotification({ type: 'error', message });
-}
-
-export function showSuccessToast(message: string): void {
-  useUIStore.getState().addNotification({ type: 'success', message });
-}
-
-export function showWarningToast(message: string): void {
-  useUIStore.getState().addNotification({ type: 'warning', message });
-}
-
-export function showInfoToast(message: string): void {
-  useUIStore.getState().addNotification({ type: 'info', message });
+/** Whether a mutation error was already surfaced inline (skip global toast). */
+export function isHandledError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "handled" in error &&
+    (error as { handled?: unknown }).handled === true
+  );
 }
