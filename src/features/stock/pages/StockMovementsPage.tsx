@@ -11,6 +11,15 @@ import type { StockMovement, StockMovementType } from "../types";
 import { useStockMovements, useCreateStockAdjustment } from "../hooks";
 import { useArticles } from "@/features/articles/hooks";
 import { FormDialog } from "@/components/forms/FormDialog";
+import {
+  FormField,
+  NumberField,
+  SelectField,
+} from "@/components/forms/FormFields";
+import {
+  StockAdjustmentSchema,
+  type StockAdjustmentFormData,
+} from "../schemas";
 import { Button } from "@/components/ui/Button";
 import { hasAnyRole } from "@/lib/permissions";
 import { Plus, TrendingDown, TrendingUp, Scale } from "lucide-react";
@@ -20,19 +29,6 @@ const TYPE_ICON_CLASS = {
   SORTIE: "text-danger-600 dark:text-danger-500",
   AJUSTEMENT: "text-info-600 dark:text-info-500",
 } as const;
-
-/** Adjustment form values (validated inline — the schema is a plain object shape). */
-type AdjustForm = { articleId: string; quantity: number; reason: string };
-
-const AdjustSchema = {
-  safeParse: (v: AdjustForm) =>
-    v.articleId !== "" &&
-    Number.isInteger(v.quantity) &&
-    v.quantity !== 0 &&
-    v.reason.trim() !== ""
-      ? { success: true as const, data: v }
-      : { success: false as const },
-};
 
 /**
  * StockMovementsPage (P5.2) — the movements ledger:
@@ -148,7 +144,7 @@ export const StockMovementsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
-  const handleAdjust = async (values: AdjustForm) => {
+  const handleAdjust = async (values: StockAdjustmentFormData) => {
     await createAdjustment.mutateAsync(values);
   };
 
@@ -213,7 +209,10 @@ export const StockMovementsPage = () => {
 
 /**
  * Adjustment dialog — article picker, signed quantity, mandatory motif.
- * Uses the standard FormDialog so styling, focus and pending state match.
+ *
+ * Built on the standard FormDialog + zod resolver, so the three fields the
+ * contract requires are validated and their messages rendered like every
+ * other form in the app.
  */
 function AdjustDialog({
   open,
@@ -222,97 +221,50 @@ function AdjustDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: AdjustForm) => Promise<unknown>;
+  onSubmit: (values: StockAdjustmentFormData) => Promise<unknown>;
 }) {
   const { t } = useTranslation("stock");
   const articlesQuery = useArticles();
 
-  const [articleId, setArticleId] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [reason, setReason] = useState("");
-
-  const valid = AdjustSchema.safeParse({ articleId, quantity, reason }).success;
-
-  const handleSubmit = async () => {
-    if (!valid) return;
-    await onSubmit({ articleId, quantity, reason: reason.trim() });
-    setArticleId("");
-    setQuantity(1);
-    setReason("");
-  };
+  const articleOptions = (articlesQuery.data ?? []).map((article) => ({
+    value: article.id,
+    label: `${article.code} — ${article.designation}`,
+  }));
 
   return (
-    <FormDialog
+    <FormDialog<StockAdjustmentFormData>
       open={open}
       onClose={onClose}
       title={t("adjustTitle")}
-      schema={AdjustSchema as never}
-      defaultValues={{ articleId, quantity, reason }}
-      onSubmit={handleSubmit}
+      schema={StockAdjustmentSchema}
+      defaultValues={{ articleId: "", quantity: 1, reason: "" }}
+      onSubmit={onSubmit}
     >
-      {() => (
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="adjust-article"
-              className="mb-1 block text-sm font-medium text-content"
-            >
-              {t("fields.article")}
-            </label>
-            <select
-              id="adjust-article"
-              value={articleId}
-              onChange={(e) => setArticleId(e.target.value)}
-              required
-              className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-content dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
-            >
-              <option value="" disabled>
-                —
-              </option>
-              {(articlesQuery.data ?? []).map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.code} — {a.designation}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="adjust-qty"
-              className="mb-1 block text-sm font-medium text-content"
-            >
-              {t("fields.quantitySigned")}
-            </label>
-            <input
-              id="adjust-qty"
-              type="number"
-              step={1}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-content dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
-              aria-describedby="adjust-qty-hint"
-            />
-            <p id="adjust-qty-hint" className="mt-1 text-xs text-content-muted">
-              {t("fields.quantitySignedHint")}
-            </p>
-          </div>
-          <div>
-            <label
-              htmlFor="adjust-reason"
-              className="mb-1 block text-sm font-medium text-content"
-            >
-              {t("fields.reason")}
-            </label>
-            <input
-              id="adjust-reason"
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              required
-              className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-content dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
-            />
-          </div>
-        </div>
+      {({ control }) => (
+        <>
+          <SelectField
+            name="articleId"
+            control={control}
+            label={t("fields.article")}
+            placeholder="—"
+            options={articleOptions}
+            required
+          />
+          <NumberField
+            name="quantity"
+            control={control}
+            label={t("fields.quantitySigned")}
+            helperText={t("fields.quantitySignedHint")}
+            step={1}
+            required
+          />
+          <FormField
+            name="reason"
+            control={control}
+            label={t("fields.reason")}
+            required
+          />
+        </>
       )}
     </FormDialog>
   );

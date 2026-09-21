@@ -37,7 +37,7 @@ export function DateCell({
   return <span>{withTime ? formatDateTime(value) : formatDate(value)}</span>;
 }
 
-/** Currency cell (EUR, fr-FR). */
+/** Currency cell — uses the app currency (see lib/constants CURRENCY). */
 export function CurrencyCell({
   value,
   className,

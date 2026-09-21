@@ -12,7 +12,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Dialog } from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
+import { Button, type ButtonProps } from "@/components/ui/Button";
 import { useTranslation } from "react-i18next";
 import { extractFieldErrors } from "@/api/interceptors";
 import { getFieldErrors } from "@/lib/error-handler";
@@ -43,10 +43,19 @@ interface FormDialogProps<TValues extends FieldValues> {
   description?: string;
   /** zod schema whose output matches TValues (z.infer<typeof Schema>). */
   schema: z.ZodType<TValues, FieldValues>;
-  defaultValues: TValues;
+  /**
+   * RHF's own default-values type rather than `TValues`: a CREATE form
+   * legitimately starts with its required fields empty (a price input must
+   * begin blank, not at 0), which `TValues` would reject.
+   */
+  defaultValues: DefaultValues<TValues>;
   onSubmit: (values: TValues) => Promise<unknown>;
   /** Submit label (default: i18n common.save). */
   submitLabel?: string;
+  /** Submit button color variant (default: primary). */
+  submitVariant?: ButtonProps["variant"];
+  /** Forwarded to the Dialog panel — e.g. "max-w-2xl" for a wide form. */
+  className?: string;
   children: (form: UseFormReturn<TValues>) => React.ReactNode;
 }
 
@@ -59,6 +68,8 @@ export function FormDialog<TValues extends FieldValues>({
   defaultValues,
   onSubmit,
   submitLabel,
+  submitVariant = "primary",
+  className,
   children,
 }: FormDialogProps<TValues>) {
   const { t } = useTranslation("common");
@@ -67,7 +78,7 @@ export function FormDialog<TValues extends FieldValues>({
   // cast bridges zod's structural output type to RHF's FieldValues contract.
   const form = useForm<TValues, unknown, TValues>({
     resolver: zodResolver(schema) as unknown as Resolver<TValues>,
-    defaultValues: defaultValues as DefaultValues<TValues>,
+    defaultValues,
     mode: "onTouched",
   });
 
@@ -106,6 +117,7 @@ export function FormDialog<TValues extends FieldValues>({
       onOpenChange={(next) => (next ? undefined : onClose())}
       title={title}
       description={description}
+      className={className}
     >
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} noValidate>
@@ -119,7 +131,11 @@ export function FormDialog<TValues extends FieldValues>({
             <Button type="button" variant="outline" onClick={onClose}>
               {t("cancel")}
             </Button>
-            <Button type="submit" loading={form.formState.isSubmitting}>
+            <Button
+              type="submit"
+              variant={submitVariant}
+              loading={form.formState.isSubmitting}
+            >
               {submitLabel ?? t("save")}
             </Button>
           </div>

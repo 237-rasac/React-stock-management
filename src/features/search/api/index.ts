@@ -1,5 +1,6 @@
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { formatCurrency } from "@/lib/utils";
 import type { Article } from "@/features/articles/types";
 import type { Customer } from "@/features/customers/types";
 import type { Supplier } from "@/features/suppliers/types";
@@ -69,7 +70,7 @@ export const searchEntities = async (
       map: (o: CustomerOrder) => ({
         title: o.code,
         subtitle: o.customerName,
-        meta: o.total > 0 ? `${o.total.toFixed(2)} €` : undefined,
+        meta: o.total > 0 ? formatCurrency(o.total) : undefined,
       }),
     },
     {
@@ -79,7 +80,7 @@ export const searchEntities = async (
       map: (o: SupplierOrder) => ({
         title: o.code,
         subtitle: o.supplierName,
-        meta: o.total > 0 ? `${o.total.toFixed(2)} €` : undefined,
+        meta: o.total > 0 ? formatCurrency(o.total) : undefined,
       }),
     },
   ];

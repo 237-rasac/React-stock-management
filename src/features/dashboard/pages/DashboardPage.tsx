@@ -4,14 +4,17 @@ import { AlertTriangle, Package, ShoppingCart, TrendingUp } from "lucide-react";
 import { useDashboardKPIs } from "../hooks";
 import { SalesChartCard } from "../components/SalesChartCard";
 import { CategoryDonutCard } from "../components/CategoryDonutCard";
+import { StockFlowChartCard } from "../components/StockFlowChartCard";
+import { TopArticlesCard } from "../components/TopArticlesCard";
 import { PanelHead } from "../components/PanelHead";
 import { StatCard } from "@/components/ui/StatCard";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/feedback/FeedbackStates";
 import { useStockAlertes } from "@/features/stock/hooks";
 import { useCustomerOrders } from "@/features/customer-orders/hooks";
-import { formatDate } from "@/lib/utils";
+import { currencySymbol, formatDate } from "@/lib/utils";
 import { langPath } from "@/lib/lang-path";
+import { useAuthStore } from "@/stores/auth.store";
 import { OrderStatusBadge } from "@/features/customer-orders/components/OrderStatusBadge";
 
 const STAGGER_DELAYS = ["0s", "0.06s", "0.12s", "0.18s"] as const;
@@ -168,6 +171,8 @@ const RecentOrdersPanel = () => {
 export const DashboardPage = () => {
   const { t } = useTranslation("dashboard");
   const { data: kpis, isPending, isError, refetch } = useDashboardKPIs();
+  // The tenant the session belongs to, named in the subtitle like the mockup.
+  const companyName = useAuthStore((s) => s.user?.companyName);
 
   return (
     <div className="space-y-5">
@@ -179,11 +184,16 @@ export const DashboardPage = () => {
         <h1 className="mt-1.5 font-display text-[30px] font-semibold text-content">
           {t("title")}
         </h1>
+        <p className="mt-1.5 text-sm text-content-muted">
+          {companyName
+            ? t("subtitleFor", { company: companyName })
+            : t("subtitle")}
+        </p>
       </div>
 
       {/* KPI grid */}
       {isPending && (
-        <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 min-[1180px]:grid-cols-4">
+        <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 dash:grid-cols-4">
           {STAGGER_DELAYS.map((delay) => (
             <StatCardSkeleton key={delay} />
           ))}
@@ -200,7 +210,7 @@ export const DashboardPage = () => {
 
       {kpis && (
         <>
-          <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 min-[1180px]:grid-cols-4">
+          <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 dash:grid-cols-4">
             <div
               className="rise-in"
               style={{ animationDelay: STAGGER_DELAYS[0] }}
@@ -218,7 +228,7 @@ export const DashboardPage = () => {
             >
               <StatCard
                 value={kpis.revenueThisMonth}
-                suffix="€"
+                suffix={currencySymbol()}
                 label={t("kpi.revenueThisMonth")}
                 icon={TrendingUp}
                 tone="success"
@@ -249,7 +259,7 @@ export const DashboardPage = () => {
           </div>
 
           {/* dash-grid row 1: sales chart (1.4fr) + recent orders (1fr) */}
-          <div className="grid grid-cols-1 gap-5 min-[1180px]:grid-cols-[1.4fr_1fr]">
+          <div className="grid grid-cols-1 gap-5 dash:grid-cols-[1.4fr_1fr]">
             <div className="rise-in" style={{ animationDelay: "0.26s" }}>
               <SalesChartCard />
             </div>
@@ -259,12 +269,22 @@ export const DashboardPage = () => {
           </div>
 
           {/* dash-grid row 2: category donut (1.4fr) + alerts (1fr) */}
-          <div className="grid grid-cols-1 gap-5 min-[1180px]:grid-cols-[1.4fr_1fr]">
+          <div className="grid grid-cols-1 gap-5 dash:grid-cols-[1.4fr_1fr]">
             <div className="rise-in" style={{ animationDelay: "0.38s" }}>
               <CategoryDonutCard />
             </div>
             <div className="rise-in" style={{ animationDelay: "0.44s" }}>
               <StockAlertsPanel />
+            </div>
+          </div>
+
+          {/* dash-grid row 3: server-computed series from /dashboard/graphiques */}
+          <div className="grid grid-cols-1 gap-5 dash:grid-cols-[1.4fr_1fr]">
+            <div className="rise-in" style={{ animationDelay: "0.50s" }}>
+              <StockFlowChartCard />
+            </div>
+            <div className="rise-in" style={{ animationDelay: "0.56s" }}>
+              <TopArticlesCard />
             </div>
           </div>
         </>

@@ -7,6 +7,7 @@ declare module "i18next" {
       common: typeof import("./resources").globalResources.fr.common;
       auth: Record<string, string>;
       dashboard: Record<string, string>;
+      platform: Record<string, string>;
       articles: Record<string, string>;
       customers: Record<string, string>;
       suppliers: Record<string, string>;
@@ -28,6 +29,7 @@ export type TranslationNamespace =
   | "common"
   | "auth"
   | "dashboard"
+  | "platform"
   | "articles"
   | "customers"
   | "suppliers"

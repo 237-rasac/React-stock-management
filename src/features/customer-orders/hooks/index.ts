@@ -57,6 +57,42 @@ export const useValidateCustomerOrder = () => {
   });
 };
 
+/**
+ * PUT /{id}/expedier — VALIDEE → EXPEDIEE.
+ * No stock side effect: the exits already happened at validation, shipping
+ * only advances the fulfilment state.
+ */
+export const useShipCustomerOrder = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation("customer-orders");
+  return useMutation({
+    mutationFn: CustomerOrdersApi.ship,
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: customerOrdersKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: customerOrdersKeys.detail(order.id),
+      });
+      toastSuccess(t("toast.shipped"));
+    },
+  });
+};
+
+/** PUT /{id}/livrer — EXPEDIEE → LIVREE, the terminal state. */
+export const useDeliverCustomerOrder = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation("customer-orders");
+  return useMutation({
+    mutationFn: CustomerOrdersApi.deliver,
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: customerOrdersKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: customerOrdersKeys.detail(order.id),
+      });
+      toastSuccess(t("toast.delivered"));
+    },
+  });
+};
+
 /** PUT /{id}/annuler — only while EN_COURS. */
 export const useCancelCustomerOrder = () => {
   const queryClient = useQueryClient();

@@ -1,6 +1,8 @@
 import { lazy } from "react";
 import { createBrowserRouter, Navigate, useLocation } from "react-router";
-import { ProtectedRoute, RoleRoute, LangGuard } from "@/routes";
+import { ProtectedRoute, RoleRoute, TenantRoute, LangGuard } from "@/routes";
+import { useAuthStore } from "@/stores/auth.store";
+import { landingPathFor } from "@/lib/navigation";
 import { isAppLang } from "@/i18n";
 import { legacyTarget } from "@/lib/lang-path";
 
@@ -89,9 +91,14 @@ const NotificationsPage = lazy(() =>
     default: m.NotificationsPage,
   })),
 );
-const CompaniesPage = lazy(() =>
-  import("@/features/companies/pages/CompaniesPage").then((m) => ({
-    default: m.CompaniesPage,
+const PlatformDashboardPage = lazy(() =>
+  import("@/features/platform/pages/PlatformDashboardPage").then((m) => ({
+    default: m.PlatformDashboardPage,
+  })),
+);
+const PlatformCompaniesPage = lazy(() =>
+  import("@/features/platform/pages/PlatformCompaniesPage").then((m) => ({
+    default: m.PlatformCompaniesPage,
   })),
 );
 const UsersPage = lazy(() =>
@@ -176,6 +183,15 @@ const LegacyOrNotFound = () => {
   );
 };
 
+/**
+ * Role-aware landing for "/{lang}": the platform operator goes to the
+ * platform console, every company user to their tenant dashboard.
+ */
+const RoleLanding = () => {
+  const user = useAuthStore((s) => s.user);
+  return <Navigate to={`.${landingPathFor(user?.roles)}`} replace />;
+};
+
 export const router = createBrowserRouter([
   { path: "/", element: <RootRedirect /> },
   {
@@ -191,45 +207,75 @@ export const router = createBrowserRouter([
             element: <ProtectedRoute />,
             errorElement: <ErrorPage />,
             children: [
-              { index: true, element: <Navigate to="dashboard" replace /> },
-              { path: "dashboard", element: <DashboardPage /> },
+              { index: true, element: <RoleLanding /> },
+
+              // ---- Platform console: SUPER_ADMIN only -------------------
+              // A company ADMIN can no longer reach company management at
+              // all — not in the sidebar, and not by typing the URL.
               {
-                element: <RoleRoute allowedRoles={["ADMIN"]} />,
+                element: <RoleRoute allowedRoles={["SUPER_ADMIN"]} />,
                 children: [
-                  { path: "companies", element: <CompaniesPage /> },
-                  { path: "users", element: <UsersPage /> },
+                  { path: "platform", element: <PlatformDashboardPage /> },
+                  {
+                    path: "platform/companies",
+                    element: <PlatformCompaniesPage />,
+                  },
                 ],
               },
+
+              // ---- Tenant app: every company-scoped screen --------------
+              // TenantRoute bounces a SUPER_ADMIN back to the console: they
+              // belong to no company, so these pages have no data for them.
               {
-                element: <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]} />,
+                element: <TenantRoute />,
                 children: [
-                  { path: "catalog/categories", element: <CategoriesPage /> },
+                  { path: "dashboard", element: <DashboardPage /> },
+                  {
+                    element: <RoleRoute allowedRoles={["ADMIN"]} />,
+                    children: [{ path: "users", element: <UsersPage /> }],
+                  },
+                  {
+                    element: (
+                      <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]} />
+                    ),
+                    children: [
+                      {
+                        path: "catalog/categories",
+                        element: <CategoriesPage />,
+                      },
+                    ],
+                  },
+                  { path: "catalog/articles", element: <ArticlesPage /> },
+                  {
+                    path: "catalog/articles/:id",
+                    element: <ArticleDetailsPage />,
+                  },
+                  { path: "customers", element: <CustomersPage /> },
+                  { path: "customers/:id", element: <CustomerDetailsPage /> },
+                  { path: "suppliers", element: <SuppliersPage /> },
+                  { path: "suppliers/:id", element: <SupplierDetailsPage /> },
+                  { path: "customer-orders", element: <CustomerOrdersPage /> },
+                  {
+                    path: "customer-orders/:id",
+                    element: <CustomerOrderDetailsPage />,
+                  },
+                  { path: "supplier-orders", element: <SupplierOrdersPage /> },
+                  {
+                    path: "supplier-orders/:id",
+                    element: <SupplierOrderDetailsPage />,
+                  },
+                  { path: "sales", element: <SalesPage /> },
+                  { path: "stock", element: <StockPage /> },
+                  { path: "stock/movements", element: <StockMovementsPage /> },
+                  { path: "stock/alerts", element: <StockAlertsPage /> },
+                  { path: "search", element: <SearchResultsPage /> },
                 ],
               },
-              { path: "catalog/articles", element: <ArticlesPage /> },
-              { path: "catalog/articles/:id", element: <ArticleDetailsPage /> },
-              { path: "customers", element: <CustomersPage /> },
-              { path: "customers/:id", element: <CustomerDetailsPage /> },
-              { path: "suppliers", element: <SuppliersPage /> },
-              { path: "suppliers/:id", element: <SupplierDetailsPage /> },
-              { path: "customer-orders", element: <CustomerOrdersPage /> },
-              {
-                path: "customer-orders/:id",
-                element: <CustomerOrderDetailsPage />,
-              },
-              { path: "supplier-orders", element: <SupplierOrdersPage /> },
-              {
-                path: "supplier-orders/:id",
-                element: <SupplierOrderDetailsPage />,
-              },
-              { path: "sales", element: <SalesPage /> },
-              { path: "stock", element: <StockPage /> },
-              { path: "stock/movements", element: <StockMovementsPage /> },
-              { path: "stock/alerts", element: <StockAlertsPage /> },
+
+              // ---- Shared by both worlds --------------------------------
               { path: "notifications", element: <NotificationsPage /> },
               { path: "profile", element: <ProfilePage /> },
               { path: "settings", element: <SettingsPage /> },
-              { path: "search", element: <SearchResultsPage /> },
             ],
           },
         ],

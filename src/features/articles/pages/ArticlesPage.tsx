@@ -10,7 +10,7 @@ import {
 } from "@/components/data-table";
 import type { Article, CategorieSummary } from "../types";
 import type { ArticlesFormData } from "../schemas";
-import { ArticlesSchema } from "../schemas";
+import { ArticlesSchema, DEFAULT_VAT_RATE } from "../schemas";
 import {
   useArticles,
   useCreateArticle,
@@ -36,6 +36,9 @@ export const ArticlesPage = () => {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockStatusFilter, setStockStatusFilter] = useState<
+    "all" | "inStock" | "low" | "out"
+  >("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Article | null>(null);
   const [deleting, setDeleting] = useState<Article | null>(null);
@@ -60,9 +63,23 @@ export const ArticlesPage = () => {
 
   const filteredData = useMemo(() => {
     const data = listQuery.data ?? [];
-    if (!categoryFilter) return data;
-    return data.filter((a: Article) => a.category?.id === categoryFilter);
-  }, [listQuery.data, categoryFilter]);
+    return data.filter((article: Article) => {
+      const matchesCategory =
+        !categoryFilter || article.category?.id === categoryFilter;
+      if (!matchesCategory) return false;
+
+      if (stockStatusFilter === "all") return true;
+      const status = formatStockStatus(article.currentStock, article.minStock);
+      return (
+        status.variant ===
+        (stockStatusFilter === "out"
+          ? "danger"
+          : stockStatusFilter === "low"
+            ? "warning"
+            : "success")
+      );
+    });
+  }, [listQuery.data, categoryFilter, stockStatusFilter]);
 
   const columns = useMemo(() => {
     const helper = createDataTableColumns<Article>();
@@ -126,10 +143,11 @@ export const ArticlesPage = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="group"
                     aria-label={t("confirmDelete")}
                     onClick={() => setDeleting(info.row.original)}
                   >
-                    <Trash2 className="h-4 w-4 text-danger-600 dark:text-danger-500" />
+                    <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
                   </Button>
                 </div>
               ),
@@ -168,6 +186,7 @@ export const ArticlesPage = () => {
         actions={
           canManage ? (
             <Button
+              variant="gold"
               onClick={() => {
                 setEditing(null);
                 setDialogOpen(true);
@@ -180,20 +199,39 @@ export const ArticlesPage = () => {
         }
       >
         {/* Category filter select */}
-        <div className="w-48">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-primary/20 dark:bg-[color:var(--dark-input)] dark:border-[color:var(--dark-border)]"
-            aria-label={t("fields.category")}
-          >
-            <option value="">{t("allCategories")}</option>
-            {categoryOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap gap-2">
+          <div className="w-48">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
+              aria-label={t("fields.category")}
+            >
+              <option value="">{t("allCategories")}</option>
+              {categoryOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-48">
+            <select
+              value={stockStatusFilter}
+              onChange={(e) =>
+                setStockStatusFilter(
+                  e.target.value as "all" | "inStock" | "low" | "out",
+                )
+              }
+              className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
+              aria-label={t("statusFilter")}
+            >
+              <option value="all">{t("allStatuses")}</option>
+              <option value="inStock">{t("stock.inStock")}</option>
+              <option value="low">{t("stock.low")}</option>
+              <option value="out">{t("stock.out")}</option>
+            </select>
+          </div>
         </div>
       </DataTableToolbar>
 
@@ -227,8 +265,10 @@ export const ArticlesPage = () => {
             : {
                 code: "",
                 designation: "",
-                unitPriceHt: 0,
-                vatRate: 0,
+                // Left empty so the first keystroke is the first digit — a
+                // default of 0 made "1" render as "01" (see NumericInput).
+                unitPriceHt: undefined,
+                vatRate: DEFAULT_VAT_RATE,
                 categoryId: "",
               }
         }

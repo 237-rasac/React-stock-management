@@ -1,18 +1,26 @@
 /**
- * Auth — real shapes pinned from swagger.json (roadmap P0.2/P0.4).
+ * Auth — real shapes pinned from swagger.json.
  *
  * Backend contract:
- *   POST /api/auth/login → LoginResponse  { token, user: UserInfo }
- *   GET  /api/auth/me    → CurrentUserResponse (UserInfo + mail, numTel)
+ *   POST /api/auth/login   → AuthTokensDTO { token, refreshToken, user }
+ *   POST /api/auth/refresh → AuthTokensDTO  (rotation: the old refresh token
+ *                            becomes unusable)                    (200 | 401)
+ *   POST /api/auth/logout  → 204            (revokes the refresh token)
+ *   GET  /api/auth/me      → CurrentUserResponse (UserInfo + mail, numTel)
  *
- * NOTE: there is NO refresh token in swagger v1.0 — the JWT is the only
- * credential. /auth/register is admin-only user creation (not self-signup)
- * and belongs to the Users feature (P3.3), not here.
+ * /auth/register is admin-only user creation (not self-signup) and belongs to
+ * the Users feature. Platform onboarding creates a company's first ADMIN in
+ * one transaction — see features/platform.
  */
 
-export type UserRole = "ADMIN" | "GESTIONNAIRE" | "VENDEUR";
+/**
+ * Backend roles. `SUPER_ADMIN` operates the platform itself and is NOT bound
+ * to a company (`entrepriseId` is absent); every other role belongs to
+ * exactly one client company.
+ */
+export type UserRole = "SUPER_ADMIN" | "ADMIN" | "GESTIONNAIRE" | "VENDEUR";
 
-/** `user` payload of LoginResponse — swagger `UserInfo`. */
+/** `user` payload of AuthTokensDTO — swagger `UserInfo`. */
 export interface UserInfoDTO {
   id: number;
   nom: string;
@@ -20,12 +28,22 @@ export interface UserInfoDTO {
   login: string;
   role: UserRole;
   entrepriseId?: number;
+  entrepriseNom?: string;
 }
 
-/** Response of POST /api/auth/login — swagger `LoginResponse`. No refresh token. */
-export interface LoginResponseDTO {
+/**
+ * Response of POST /api/auth/login and POST /api/auth/refresh —
+ * swagger `AuthTokensDTO`.
+ */
+export interface AuthTokensDTO {
   token: string;
+  refreshToken: string;
   user: UserInfoDTO;
+}
+
+/** Body of POST /api/auth/refresh and /api/auth/logout — `AuthTokensRequest`. */
+export interface AuthTokensRequestDTO {
+  refreshToken: string;
 }
 
 /** Response of GET /api/auth/me — swagger `CurrentUserResponse`. */
@@ -48,5 +66,8 @@ export interface AuthUser {
   phone?: string;
   /** Backend sends a single role; kept as an array for role-gating helpers. */
   roles: UserRole[];
+  /** Absent for SUPER_ADMIN — the platform operator owns no single company. */
   companyId?: string;
+  /** `entrepriseNom`, shown in the shell so users know which tenant they are in. */
+  companyName?: string;
 }

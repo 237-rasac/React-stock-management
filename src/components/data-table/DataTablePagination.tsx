@@ -31,51 +31,51 @@ export function DataTablePagination({
   const { t } = useTranslation("common");
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm">
-      <p className="text-content-muted">
+    <div className="grid items-center gap-3 border-t border-border px-4 py-4 text-sm sm:grid-cols-[1fr_auto_1fr]">
+      <p className="text-center text-content-muted sm:text-left">
         {t("totalItems", { count: totalItems })}
       </p>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="dt-page-size" className="sr-only">
-            {t("rowsPerPage")}
-          </label>
-          <select
-            id="dt-page-size"
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="rounded-sm border border-border-strong bg-surface px-2 py-1 text-sm text-content focus:outline-none focus:ring-2 focus:ring-primary/20 dark:bg-[color:var(--dark-input)] dark:border-[color:var(--dark-border)]"
-          >
-            {PAGINATION_SIZES.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
-        <span className="whitespace-nowrap text-content-muted">
+      <div className="flex items-center justify-center gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 rounded-full border-border-strong transition-colors hover:border-primary hover:bg-primary/10"
+          onClick={() => onPageChange(pageIndex - 1)}
+          disabled={pageIndex === 0}
+          aria-label={t("previous")}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="min-w-24 text-center whitespace-nowrap font-medium text-content">
           {t("pageInfo", { page: pageIndex + 1, totalPages: pageCount })}
         </span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(pageIndex - 1)}
-            disabled={pageIndex === 0}
-            aria-label={t("previous")}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(pageIndex + 1)}
-            disabled={pageIndex >= pageCount - 1}
-            aria-label={t("next")}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 rounded-full border-border-strong transition-colors hover:border-primary hover:bg-primary/10"
+          onClick={() => onPageChange(pageIndex + 1)}
+          disabled={pageIndex >= pageCount - 1}
+          aria-label={t("next")}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex items-center justify-center gap-2 sm:justify-self-end">
+        <label htmlFor="dt-page-size" className="text-content-muted">
+          {t("rowsPerPage")}
+        </label>
+        <select
+          id="dt-page-size"
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          className="h-9 rounded-sm border border-border-strong bg-surface px-2 text-sm text-content focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-[color:var(--dark-border)] dark:bg-[color:var(--dark-input)]"
+        >
+          {PAGINATION_SIZES.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

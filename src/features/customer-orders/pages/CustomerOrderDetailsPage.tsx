@@ -8,14 +8,24 @@ import { CurrencyCell, DateCell } from "@/components/data-table";
 import {
   useCustomerOrder,
   useValidateCustomerOrder,
+  useShipCustomerOrder,
+  useDeliverCustomerOrder,
   useCancelCustomerOrder,
 } from "../hooks";
+import { ORDER_TRANSITIONS } from "../types";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { ConfirmDialog } from "@/components/forms/ConfirmDialog";
 import { hasAnyRole } from "@/lib/permissions";
-import { ArrowLeft, Ban, CheckCircle2, ShoppingCart } from "lucide-react";
+import {
+  ArrowLeft,
+  Ban,
+  CheckCircle2,
+  PackageCheck,
+  ShoppingCart,
+  Truck,
+} from "lucide-react";
 
-type LifecycleAction = "validate" | "cancel" | null;
+type LifecycleAction = "validate" | "ship" | "deliver" | "cancel" | null;
 
 /**
  * CustomerOrderDetailsPage (P4.2) — the core order flow:
@@ -35,17 +45,21 @@ export const CustomerOrderDetailsPage = () => {
 
   const orderQuery = useCustomerOrder(id ?? "");
   const validateOrder = useValidateCustomerOrder();
+  const shipOrder = useShipCustomerOrder();
+  const deliverOrder = useDeliverCustomerOrder();
   const cancelOrder = useCancelCustomerOrder();
 
   const order = orderQuery.data;
 
   const handleConfirm = async () => {
     if (!order) return;
-    if (lifecycleAction === "validate") {
-      await validateOrder.mutateAsync(order.id);
-    } else if (lifecycleAction === "cancel") {
-      await cancelOrder.mutateAsync(order.id);
-    }
+    const run = {
+      validate: validateOrder,
+      ship: shipOrder,
+      deliver: deliverOrder,
+      cancel: cancelOrder,
+    }[lifecycleAction ?? "validate"];
+    if (lifecycleAction) await run.mutateAsync(order.id);
     setLifecycleAction(null);
   };
 
@@ -92,8 +106,12 @@ export const CustomerOrderDetailsPage = () => {
     );
   }
 
-  const isPending = order.status === "EN_COURS";
-  const showLifecycle = canManage && isPending;
+  // Which buttons to show is decided by the contract's lifecycle table, not
+  // by ad-hoc status checks: an order can only move one step at a time.
+  const allowed = ORDER_TRANSITIONS[order.status];
+  const showLifecycle =
+    canManage &&
+    (allowed.validate || allowed.ship || allowed.deliver || allowed.cancel);
 
   return (
     <div className="space-y-6">
@@ -103,17 +121,42 @@ export const CustomerOrderDetailsPage = () => {
         actions={
           showLifecycle ? (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setLifecycleAction("cancel")}
-              >
-                <Ban className="h-4 w-4" />
-                {t("cancel")}
-              </Button>
-              <Button onClick={() => setLifecycleAction("validate")}>
-                <CheckCircle2 className="h-4 w-4" />
-                {t("validate")}
-              </Button>
+              {allowed.cancel && (
+                <Button
+                  variant="outline"
+                  onClick={() => setLifecycleAction("cancel")}
+                >
+                  <Ban className="h-4 w-4" />
+                  {t("cancel")}
+                </Button>
+              )}
+              {allowed.validate && (
+                <Button
+                  variant="gold"
+                  onClick={() => setLifecycleAction("validate")}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t("validate")}
+                </Button>
+              )}
+              {allowed.ship && (
+                <Button
+                  variant="gold"
+                  onClick={() => setLifecycleAction("ship")}
+                >
+                  <Truck className="h-4 w-4" />
+                  {t("ship")}
+                </Button>
+              )}
+              {allowed.deliver && (
+                <Button
+                  variant="gold"
+                  onClick={() => setLifecycleAction("deliver")}
+                >
+                  <PackageCheck className="h-4 w-4" />
+                  {t("deliver")}
+                </Button>
+              )}
             </>
           ) : undefined
         }
@@ -228,6 +271,24 @@ export const CustomerOrderDetailsPage = () => {
         onConfirm={handleConfirm}
       />
       <ConfirmDialog
+        open={lifecycleAction === "ship"}
+        onClose={() => setLifecycleAction(null)}
+        title={t("shipTitle")}
+        entityName={order.code}
+        description={t("shipConfirm")}
+        confirmLabel={t("ship")}
+        onConfirm={handleConfirm}
+      />
+      <ConfirmDialog
+        open={lifecycleAction === "deliver"}
+        onClose={() => setLifecycleAction(null)}
+        title={t("deliverTitle")}
+        entityName={order.code}
+        description={t("deliverConfirm")}
+        confirmLabel={t("deliver")}
+        onConfirm={handleConfirm}
+      />
+      <ConfirmDialog
         open={lifecycleAction === "cancel"}
         onClose={() => setLifecycleAction(null)}
         title={t("cancelTitle")}
@@ -265,7 +326,11 @@ function DetailsHeader({
           {status}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { SupplierOrdersApi } from "../api";
 import { toastSuccess } from "@/lib/toast";
-import type { SupplierOrderWrite } from "../types";
+import type { PartialReceptionWrite, SupplierOrderWrite } from "../types";
 
 /** Query-key factory — `all` covers orders + lifecycle side effects on detail queries. */
 export const supplierOrdersKeys = {
@@ -53,6 +53,29 @@ export const useReceiveSupplierOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       toastSuccess(t("toast.received"));
+    },
+  });
+};
+
+/**
+ * PUT /{id}/receptionner-partiel — records what was actually delivered.
+ * Same stock side effect as a full reception, for the received quantities
+ * only, so stock and article queries are invalidated too.
+ */
+export const useReceivePartialSupplierOrder = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation("supplier-orders");
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PartialReceptionWrite }) =>
+      SupplierOrdersApi.receivePartial(id, data),
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: supplierOrdersKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: supplierOrdersKeys.detail(order.id),
+      });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toastSuccess(t("toast.receivedPartial"));
     },
   });
 };

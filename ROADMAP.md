@@ -1,26 +1,66 @@
 # SGS Frontend — Development Roadmap
 
 **Date:** 2026-09-16 · **Scope:** current codebase → final delivery
-**Verdict:** the architecture, design system, shell (Sidebar/Header/Layout) and dashboard are **production-shaped**. Everything else is scaffold: 18 of 21 pages are placeholders, feature types/schemas are stubs, and the API layer points at **English endpoint paths while swagger.json pins French ones**. The roadmap below sequences the work so each module builds on a finished predecessor.
+**Verdict:** the codebase now contains a working feature-based frontend wired to the French Swagger contract. The catalogue, customers, suppliers, companies, users, customer orders and supplier orders have real list/detail/form flows; the shared table, pagination, design-system, dark-mode and responsive infrastructure is in active use. The historical plan below is retained for traceability, while the implementation update immediately after this summary is the current source of truth.
 
 ---
 
 ## 0. Current State Summary
 
-| Layer                                                                             | State             | Notes                                                                                                                                        |
-| --------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build/tooling (Vite 8, TS 7, Tailwind v4 `@theme`)                                | ✅ Solid          | typecheck + build green; env files exist (`.env`, `.env.example`, typed via `vite-env.d.ts`)                                                 |
-| Design system (`styles/`, `components/ui` — 14 primitives)                        | ✅ Solid          | brand tokens, light/dark, motion keyframes, gold/ink palette; matches mockup                                                                 |
-| App shell (Sidebar, Header, AppLayout, GlobalSearch + dropdown, view transitions) | ✅ Solid          | grouped nav, role-filtered, responsive drawer                                                                                                |
-| Auth (Login split layout, stores, interceptors + refresh)                         | 🟠 Partial        | login wired; **no `/auth/me` bootstrap, no register page, no token-in-zustand sync**                                                         |
-| Dashboard                                                                         | ✅ Near-final     | KPIs, charts, tables, alerts, skeletons; `/dashboard/charts` unpinned in swagger                                                             |
-| 18 CRUD/list pages                                                                | 🔴 Placeholders   | "À implémenter" — no tables, forms, dialogs, pagination                                                                                      |
-| Feature types & schemas                                                           | 🔴 Stubs          | `{ id, createdAt, updatedAt }` / `{ id? }`; real shapes live in `types/common.types.ts`                                                      |
-| API layer per feature                                                             | 🟠 Partial        | conventional CRUD fns, but **paths don't match swagger** (`/articles` vs `/api/articles`, `/customers` vs `/api/clients`) and no DTO mappers |
-| i18n                                                                              | 🟠 Partial        | global `common` ns complete; feature ns have ~9 keys; backend loads missing `/locales/*` (fallback to inline)                                |
-| Feedback (toasts, skeletons, states)                                              | 🟠 Partial        | FeedbackStates exist; **sonner `Toaster` not yet brand-aligned (audit #10); no `toast.*` calls anywhere**                                    |
-| Testing                                                                           | 🔴 None           | vitest/RTL in devDeps but **zero config, zero tests**; Playwright absent                                                                     |
-| Lint/CI                                                                           | 🔴 Absent as gate | ESLint config exists but no CI workflow, no husky despite `lint-staged` dep                                                                  |
+| Layer                                                                             | State               | Notes                                                                                                                  |
+| --------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Build/tooling (Vite 8, TS 7, Tailwind v4 `@theme`)                                | ✅ Solid            | typecheck + build green; env files exist (`.env`, `.env.example`, typed via `vite-env.d.ts`)                           |
+| Design system (`styles/`, `components/ui` — 14 primitives)                        | ✅ Solid            | brand tokens, light/dark, motion keyframes, gold/ink palette; matches mockup                                           |
+| App shell (Sidebar, Header, AppLayout, GlobalSearch + dropdown, view transitions) | ✅ Solid            | grouped nav, role-filtered, responsive drawer                                                                          |
+| Auth (Login split layout, stores, interceptors + refresh)                         | 🟠 Partial          | login wired; **no `/auth/me` bootstrap, no register page, no token-in-zustand sync**                                   |
+| Dashboard                                                                         | ✅ Near-final       | KPIs, charts, tables, alerts, skeletons; `/dashboard/charts` unpinned in swagger                                       |
+| CRUD/list pages                                                                   | ✅ Implemented      | Articles, categories, companies, customers, suppliers, users and order lists use shared tables/forms/pagination        |
+| Feature types & schemas                                                           | ✅ Contract-aligned | Feature DTO/domain types and mappers are aligned to `swagger.json`; optional fields are normalized at the API boundary |
+| API layer per feature                                                             | ✅ Wired            | French Swagger paths, lifecycle operations, typed mappers and no undocumented list params/envelopes                    |
+| i18n                                                                              | ✅ Maintained       | Touched customer, supplier and order flows include French/English translations; parity audit is available              |
+| Feedback (toasts, skeletons, states)                                              | 🟠 Partial          | FeedbackStates exist; **sonner `Toaster` not yet brand-aligned (audit #10); no `toast.*` calls anywhere**              |
+| Testing                                                                           | ✅ Active           | Unit/component suite reports 111 passing tests; 19 live audit cases are opt-in; Playwright smoke specs are present     |
+| Lint/CI                                                                           | ✅ Configured       | Oxlint, typecheck, CI workflow and pre-commit hooks are configured; generated test artifacts are ignored               |
+
+---
+
+## Implementation update — completed work
+
+### Contract and data layer
+
+- [x] Reconciled feature API paths with `swagger.json`; list APIs for articles, categories and companies no longer invent query parameters or response envelopes.
+- [x] Removed obsolete `RequestParams`, `PaginatedResponse`, `ApiResponse` and stale constants that were not part of the Swagger contract.
+- [x] Added DTO/domain mappers so frontend naming remains consistent without sending arbitrary backend fields.
+- [x] Verified VAT live against the API: domain `vatRate` is decimal (`0.2`), wire `tauxTva` is percentage (`20`).
+- [x] Fixed article edit submission when the API returns an empty optional `photo` value.
+
+### Catalogue, stock and CRUD
+
+- [x] Implemented real articles, categories, companies, customers, suppliers and users pages with translated CRUD forms, loading/empty/error states and API mutations.
+- [x] Article stock badges now derive from current stock and minimum threshold; status filtering is performed client-side because the Swagger list endpoint exposes no status query parameter.
+- [x] Documented that `seuilMin` is an alert threshold and does not create initial stock; stock enters through `/api/mouvements-stock`.
+- [x] Customer and supplier forms are single-column, responsive and dark-mode compatible. Address/photo/postal-code fields were removed from the visible customer form; city is manually entered.
+- [x] Phone fields use one composite control with country/dial-code selection and number entry, shared across applicable forms.
+
+### UI and design system
+
+- [x] Applied the design-system gold gradient, dark text, shadow, hover and focus treatment to primary creation actions, including article, category, customer, supplier, point-of-sale, user and company actions.
+- [x] Standardized delete icon hover states to the danger red palette and made destructive confirmation buttons visible with danger colors.
+- [x] Applied the SGS token palette to light/dark states and preserved responsive behavior for forms, dialogs, tables and action toolbars.
+- [x] Silenced `no-underscore-dangle` only for the existing session-probe file in oxlint; the rule remains active elsewhere.
+
+### Tables and orders
+
+- [x] Added centered shared pagination with page-size controls and responsive layout.
+- [x] Fixed pagination rendering to use the active paginated row model; records no longer leak onto page one when a second page exists.
+- [x] Implemented customer and supplier order creation with exact Swagger payloads, translated status filters and responsive/dark-mode forms.
+- [x] Implemented order detail pages and lifecycle actions: customer validate/ship/deliver/cancel; supplier receive/partial receive/cancel.
+- [x] Added keyboard-accessible row-click navigation from both order tables to their detail pages.
+
+### Verification
+
+- [x] TypeScript typecheck passes.
+- [x] Unit/component suite currently reports 111 passing tests; live audit has 19 opt-in cases and runs only with `LIVE=1` or `npm run test:live`.
 
 ---
 
@@ -177,13 +217,12 @@ The cheapest full loop to prove the pattern end-to-end: list → create/edit dia
 
 ## Phase 7 — Hardening & Quality Gates
 
-**P7.1 — Testing (currently zero)**
+**P7.1 — Testing (active suite)**
 
-- Configure vitest (`test` field in vite.config, jsdom, setup file with jest-dom) — deps already installed.
-- Unit: formatters, permissions, mappers, hooks (RTL renderHook), useCountUp/Sparkline.
-- Component: DataTable, FormDialog, StatCard, GlobalSearch combobox behavior.
-- Page smoke tests per feature (mock handlers via msw).
-- E2E: add Playwright — login → dashboard, create category, create order → validate, POS sale decrements stock.
+- Keep the existing Vitest/jsdom setup and expand coverage as new features land.
+- Unit/component coverage already includes formatters, permissions, mappers, i18n parity and DataTable pagination/row behavior.
+- Keep Playwright smoke coverage for i18n and the main application shell; add authenticated flows when test credentials are available.
+- Keep `npm run test:live` opt-in so local API audits never run accidentally in CI.
 
 **P7.2 — Lint & format as a gate**
 
@@ -215,23 +254,23 @@ The cheapest full loop to prove the pattern end-to-end: list → create/edit dia
 
 ## Module Status Matrix (detail)
 
-| #   | Module             | Pages                                                   | API                                                           | Types                         | Schema            | i18n    | Status                                  |
-| --- | ------------------ | ------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------- | ----------------- | ------- | --------------------------------------- |
-| 1   | auth               | Login ✅ split-layout wired; Profile/Settings 🟠 static | ✅ endpoints (paths ⚠️)                                       | 🟠 User ok, Auth stub         | ✅ login/register | ✅      | **P0.4 + P6**                           |
-| 2   | dashboard          | ✅ Complete                                             | ✅ kpis ⚠️charts unpinned                                     | ✅ typed                      | ✅                | ✅      | **Done (verify charts)**                |
-| 3   | categories         | 🔴 placeholder                                          | 🟠 paths ⚠️                                                   | 🔴 stub                       | 🔴 stub           | 🟠      | **P2 pilot**                            |
-| 4   | articles           | 🔴 list+details placeholders                            | 🟠                                                            | 🔴 real shape in common.types | 🔴                | 🟠      | **P3.1**                                |
-| 5   | customers          | 🔴                                                      | 🟠 wrong path (`/clients`)                                    | 🔴                            | 🔴                | 🟠      | **P4.1**                                |
-| 6   | suppliers          | 🔴                                                      | 🟠 wrong path (`/fournisseurs`)                               | 🔴                            | 🔴                | 🟠      | **P3.4**                                |
-| 7   | customer-orders    | 🔴                                                      | 🟠 wrong path + lifecycle ops missing                         | 🔴                            | 🔴                | 🟠      | **P4.2**                                |
-| 8   | supplier-orders    | 🔴                                                      | 🟠 wrong path + reception op missing                          | 🔴                            | 🔴                | 🟠      | **P4.3**                                |
-| 9   | sales              | 🔴                                                      | 🟠 wrong path (`/ventes`)                                     | 🔴                            | 🔴                | 🟠      | **P5.4**                                |
-| 10  | stock              | 🔴 3 pages                                              | 🟠 wrong paths (`/stock/etat`,`/alertes`,`/mouvements-stock`) | 🔴 + `any` casts              | 🔴                | 🟠      | **P5.1–3**                              |
-| 11  | companies          | 🔴                                                      | 🟠 wrong path (`/entreprises`)                                | 🔴                            | 🔴                | 🟠      | **P3.2**                                |
-| 12  | users              | 🔴                                                      | 🟠 wrong path (`/utilisateurs`)                               | 🔴                            | 🔴                | 🟠      | **P3.3**                                |
-| 13  | notifications      | 🔴                                                      | 🟠 path ok but unread-count API?                              | 🔴                            | 🔴                | 🟠      | **P6.3**                                |
-| 14  | search             | ✅ working                                              | ✅ fan-out                                                    | ✅                            | n/a               | partial | **Re-sync after P0 (endpoint renames)** |
-| 15  | ui/layout/feedback | ✅                                                      | —                                                             | —                             | —                 | —       | **Done (toaster brand pass P1.3)**      |
+| #   | Module             | Pages                                                   | API                                                           | Types                 | Schema            | i18n    | Status                                  |
+| --- | ------------------ | ------------------------------------------------------- | ------------------------------------------------------------- | --------------------- | ----------------- | ------- | --------------------------------------- |
+| 1   | auth               | Login ✅ split-layout wired; Profile/Settings 🟠 static | ✅ endpoints (paths ⚠️)                                       | 🟠 User ok, Auth stub | ✅ login/register | ✅      | **P0.4 + P6**                           |
+| 2   | dashboard          | ✅ Complete                                             | ✅ kpis ⚠️charts unpinned                                     | ✅ typed              | ✅                | ✅      | **Done (verify charts)**                |
+| 3   | categories         | ✅ list/form/delete                                     | ✅ Swagger paths                                              | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 4   | articles           | ✅ list/details/form/status filter                      | ✅ Swagger paths + mappers                                    | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 5   | customers          | ✅ list/details/form                                    | ✅ `/api/clients`                                             | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 6   | suppliers          | ✅ list/details/form                                    | ✅ `/api/fournisseurs`                                        | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 7   | customer-orders    | ✅ list/create/detail/lifecycle                         | ✅ create/detail/validate/ship/deliver/cancel                 | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 8   | supplier-orders    | ✅ list/create/detail/lifecycle                         | ✅ create/detail/receive/partial-receive/cancel               | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 9   | sales              | 🔴                                                      | 🟠 wrong path (`/ventes`)                                     | 🔴                    | 🔴                | 🟠      | **P5.4**                                |
+| 10  | stock              | 🔴 3 pages                                              | 🟠 wrong paths (`/stock/etat`,`/alertes`,`/mouvements-stock`) | 🔴 + `any` casts      | 🔴                | 🟠      | **P5.1–3**                              |
+| 11  | companies          | ✅ list/details/form                                    | ✅ `/api/entreprises`                                         | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 12  | users              | ✅ list/form/delete                                     | ✅ `/api/utilisateurs`                                        | ✅ typed/mapped       | ✅                | ✅      | **Done**                                |
+| 13  | notifications      | 🔴                                                      | 🟠 path ok but unread-count API?                              | 🔴                    | 🔴                | 🟠      | **P6.3**                                |
+| 14  | search             | ✅ working                                              | ✅ fan-out                                                    | ✅                    | n/a               | partial | **Re-sync after P0 (endpoint renames)** |
+| 15  | ui/layout/feedback | ✅                                                      | —                                                             | —                     | —                 | —       | **Done (toaster brand pass P1.3)**      |
 
 ## Suggested Execution Order
 

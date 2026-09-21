@@ -8,6 +8,8 @@
   "search": "Search",
   "filter": "Filter",
   "allCategories": "All categories",
+  "allStatuses": "All statuses",
+  "statusFilter": "Filter by status",
   "actions": "Actions",
   "confirmDelete": "Are you sure you want to delete this item?",
   "stock": {
@@ -36,5 +38,6 @@
     "created": "Article created",
     "updated": "Article updated",
     "deleted": "Article deleted"
-  }
+  },
+  "vatHint": "Standard rate in Cameroon: 19.25%"
 }

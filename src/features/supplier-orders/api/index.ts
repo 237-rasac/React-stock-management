@@ -1,8 +1,13 @@
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { toCommandeFournisseurRequest, toSupplierOrder } from "./mappers";
+import {
+  toCommandeFournisseurRequest,
+  toReceptionPartielleRequest,
+  toSupplierOrder,
+} from "./mappers";
 import type {
   CommandeFournisseurResponseDTO,
+  PartialReceptionWrite,
   SupplierOrder,
   SupplierOrderWrite,
 } from "../types";
@@ -51,6 +56,21 @@ export const SupplierOrdersApi = {
   },
 
   /** PUT /{id}/annuler. */
+  /**
+   * PUT /{id}/receptionner-partiel — records the quantity actually delivered
+   * per line and leaves the order RECUE_PARTIELLEMENT until it is complete.
+   */
+  receivePartial: async (
+    id: string,
+    input: PartialReceptionWrite,
+  ): Promise<SupplierOrder> => {
+    const res = await apiClient.put<CommandeFournisseurResponseDTO>(
+      API_ENDPOINTS.SUPPLIER_ORDER_RECEIVE_PARTIAL(id),
+      toReceptionPartielleRequest(input),
+    );
+    return toSupplierOrder(res.data);
+  },
+
   cancel: async (id: string): Promise<SupplierOrder> => {
     const res = await apiClient.put<CommandeFournisseurResponseDTO>(
       API_ENDPOINTS.SUPPLIER_ORDER_CANCEL(id),

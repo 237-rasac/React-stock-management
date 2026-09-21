@@ -17,6 +17,12 @@
 @theme inline {
   /* Breakpoints — mockup switches sidebar/topbar at 900px */
   --breakpoint-nav: 56.25rem; /* 900px */
+  /* Dashboard grids go wide here (mockup §kpi-grid / dash-grid).
+     This MUST be a named breakpoint, not an arbitrary `min-[1180px]:`
+     variant: Tailwind v4 emits arbitrary min-width variants BEFORE the named
+     scale, so `sm:grid-cols-2` landed later in the stylesheet and won the
+     cascade above 1180px — the 4-up KPI row silently rendered 2-up. */
+  --breakpoint-dash: 73.75rem; /* 1180px */
 
   /* Brand palette (aliases) — anchored to -500/-600 because tokens.css
      remaps those in .dark, so text/bg on brand color stays legible in dark */
@@ -43,6 +49,8 @@
   --color-success-100: var(--color-success-100);
   --color-warning-500: var(--color-warning-500);
   --color-warning-100: var(--color-warning-100);
+  --color-danger-700: var(--color-danger-700);
+  --color-danger-600: var(--color-danger-600);
   --color-danger-500: var(--color-danger-500);
   --color-danger-100: var(--color-danger-100);
   --color-info-500: var(--color-info-500);

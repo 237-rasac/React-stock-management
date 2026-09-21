@@ -1,12 +1,17 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { authApi } from "../api";
 import { useAuthStore } from "@/stores/auth.store";
-import { useNavigate } from "react-router";
 import { langPath } from "@/lib/lang-path";
+import { landingPathFor } from "@/lib/navigation";
 
 /**
- * Auth hooks (P0.4) — login via the swagger contract (no refresh token;
- * logout is client-side token purge).
+ * Auth hooks — login, logout and the current user.
+ *
+ * Landing after login is role-driven: a SUPER_ADMIN operates the platform and
+ * goes to the platform console, everyone else goes to their tenant dashboard
+ * (see `landingPathFor`). This is what makes the same login screen serve both
+ * audiences without asking the user which one they are.
  */
 
 export const useLogin = () => {
@@ -32,22 +37,36 @@ export const useLogin = () => {
     },
     onSuccess: (user) => {
       setAuth(user);
-      navigate(langPath("/dashboard"));
+      navigate(langPath(landingPathFor(user.roles)), { replace: true });
     },
   });
 };
 
-/** Logout is client-side only — /auth/logout is not in swagger v1.0. */
+/**
+ * Logout — revokes the refresh token server-side (POST /auth/logout), clears
+ * the local session and wipes the query cache.
+ *
+ * Clearing the cache matters here: the next user to log in on this browser
+ * may belong to a different company, and stale tenant data must never flash
+ * on their screen before the refetch lands.
+ */
 export const useLogout = () => {
   const navigate = useNavigate();
   const logout = useAuthStore((s) => s.logout);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: () => authApi.logout(),
+    onSettled: () => {
+      logout();
+      queryClient.clear();
+      navigate(langPath("/login"), { replace: true });
+    },
+  });
 
   return {
-    mutate: () => {
-      authApi.logout();
-      logout();
-      navigate(langPath("/login"));
-    },
+    mutate: () => mutation.mutate(),
+    isPending: mutation.isPending,
   };
 };
 

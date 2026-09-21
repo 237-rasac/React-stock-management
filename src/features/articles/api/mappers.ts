@@ -45,7 +45,9 @@ export function toArticle(dto: ArticleResponseDTO): Article {
     vatRate: dto.tauxTva / 100,
     // Same formula as the server (HT × (1 + tauxTva/100)).
     unitPriceTtc: dto.prixUnitaireHt * (1 + dto.tauxTva / 100),
-    photo: dto.photo,
+    // The API may serialize the optional photo as an empty string. Normalize
+    // it so the hidden form field does not fail URL validation on edit.
+    photo: dto.photo?.trim() || undefined,
     currentStock: dto.stockActuel ?? 0,
     minStock: dto.seuilMin ?? 0,
     category: dto.categorie ? toCategorieSummary(dto.categorie) : undefined,

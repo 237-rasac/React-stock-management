@@ -12,7 +12,7 @@ import type {
   UserUpdateInput,
   UtilisateurResponseDTO,
 } from "../types";
-import type { LoginResponseDTO } from "@/features/auth/types";
+import type { AuthTokensDTO } from "@/features/auth/types";
 
 /**
  * Users API — pinned to swagger.json (backend resources: «utilisateurs» + auth):
@@ -45,7 +45,7 @@ export const UsersApi = {
     input: UserCreateInput,
     entrepriseId: number,
   ): Promise<UserRecord> => {
-    const res = await apiClient.post<LoginResponseDTO>(
+    const res = await apiClient.post<AuthTokensDTO>(
       API_ENDPOINTS.AUTH.REGISTER,
       toRegisterRequest(input, entrepriseId),
     );

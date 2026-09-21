@@ -5,6 +5,7 @@ import {
   SelectField,
   CurrencyInputField,
   NumberField,
+  PercentField,
 } from "@/components/forms/FormFields";
 import type { ArticlesFormData } from "../schemas";
 
@@ -60,31 +61,28 @@ export function ArticleFormFields<T extends FieldValues>({
           label={label("unitPriceHt")}
           required
         />
-        <NumberField
+        {/* Typed and shown in percent; the form still stores the fraction. */}
+        <PercentField
           name={"vatRate" as Path<T>}
           control={control}
           label={label("vatRate")}
           required
-          min={0}
-          max={1}
-          step={0.05}
-          helperText="0–1 (0,20 = 20 %)"
+          helperText={t("vatHint")}
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <NumberField
-          name={"minStock" as Path<T>}
-          control={control}
-          label={label("minStock")}
-          min={0}
-          step={1}
-        />
-        <FormField
-          name={"photo" as Path<T>}
-          control={control}
-          label={label("photo")}
-        />
-      </div>
+      {/*
+        No photo input: swagger types `photo` as a plain string and exposes NO
+        upload endpoint, so the field could only ever hold a URL typed by
+        hand. The value of an existing article is carried through the form
+        untouched (see the pages' defaultValues), so editing never wipes it.
+      */}
+      <NumberField
+        name={"minStock" as Path<T>}
+        control={control}
+        label={label("minStock")}
+        min={0}
+        step={1}
+      />
     </>
   );
 }

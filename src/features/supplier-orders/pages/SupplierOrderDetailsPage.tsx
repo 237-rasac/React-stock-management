@@ -11,9 +11,17 @@ import {
   useCancelSupplierOrder,
 } from "../hooks";
 import { SupplierOrderStatusBadge } from "../components/SupplierOrderStatusBadge";
+import { PartialReceptionDialog } from "../components/PartialReceptionDialog";
+import { SUPPLIER_ORDER_TRANSITIONS } from "../types";
 import { ConfirmDialog } from "@/components/forms/ConfirmDialog";
 import { hasAnyRole } from "@/lib/permissions";
-import { ArrowLeft, Ban, PackageCheck, PackageOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  Ban,
+  PackageCheck,
+  PackageOpen,
+  PackagePlus,
+} from "lucide-react";
 
 type LifecycleAction = "receive" | "cancel" | null;
 
@@ -21,9 +29,15 @@ type LifecycleAction = "receive" | "cancel" | null;
  * SupplierOrderDetailsPage (P4.3) — the restocking flow:
  * header (code, supplier, date, status), line-items table with server-priced
  * lines, totals footer, and the lifecycle actions:
- *  - Réceptionner (EN_ATTENTE only) → PUT /{id}/receptionner (server generates
- *    stock entries per line; refused if already received)
- *  - Annuler → PUT /{id}/annuler, behind a confirm dialog
+ *  - Réceptionner → PUT /{id}/receptionner: credits stock with the FULL
+ *    ordered quantity per line; refused once the order is complete
+ *  - Réception partielle → PUT /{id}/receptionner-partiel: credits only what
+ *    was actually delivered, leaving the order RECUE_PARTIELLEMENT so the
+ *    remainder can be received later
+ *  - Annuler (EN_ATTENTE only) → PUT /{id}/annuler, behind a confirm dialog
+ *
+ * Which buttons appear is driven by SUPPLIER_ORDER_TRANSITIONS, not by
+ * ad-hoc status checks.
  * Route: /supplier-orders/:id.
  */
 export const SupplierOrderDetailsPage = () => {
@@ -31,6 +45,7 @@ export const SupplierOrderDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
 
   const [lifecycleAction, setLifecycleAction] = useState<LifecycleAction>(null);
+  const [partialOpen, setPartialOpen] = useState(false);
 
   const canManage = hasAnyRole(["ADMIN", "GESTIONNAIRE"]);
 
@@ -93,8 +108,11 @@ export const SupplierOrderDetailsPage = () => {
     );
   }
 
-  const isPending = order.status === "EN_ATTENTE";
-  const showLifecycle = canManage && isPending;
+  // Allowed actions come from the contract's lifecycle table rather than an
+  // ad-hoc status check: a partially received order can still receive more.
+  const allowed = SUPPLIER_ORDER_TRANSITIONS[order.status];
+  const showLifecycle =
+    canManage && (allowed.receive || allowed.receivePartial || allowed.cancel);
 
   return (
     <div className="space-y-6">
@@ -104,17 +122,30 @@ export const SupplierOrderDetailsPage = () => {
         actions={
           showLifecycle ? (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setLifecycleAction("cancel")}
-              >
-                <Ban className="h-4 w-4" />
-                {t("cancel")}
-              </Button>
-              <Button onClick={() => setLifecycleAction("receive")}>
-                <PackageCheck className="h-4 w-4" />
-                {t("receive")}
-              </Button>
+              {allowed.cancel && (
+                <Button
+                  variant="outline"
+                  onClick={() => setLifecycleAction("cancel")}
+                >
+                  <Ban className="h-4 w-4" />
+                  {t("cancel")}
+                </Button>
+              )}
+              {allowed.receivePartial && (
+                <Button variant="outline" onClick={() => setPartialOpen(true)}>
+                  <PackagePlus className="h-4 w-4" />
+                  {t("reception.cta")}
+                </Button>
+              )}
+              {allowed.receive && (
+                <Button
+                  variant="gold"
+                  onClick={() => setLifecycleAction("receive")}
+                >
+                  <PackageCheck className="h-4 w-4" />
+                  {t("receive")}
+                </Button>
+              )}
             </>
           ) : undefined
         }
@@ -218,6 +249,13 @@ export const SupplierOrderDetailsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Partial reception — per-line quantities actually delivered */}
+      <PartialReceptionDialog
+        order={order}
+        open={partialOpen}
+        onClose={() => setPartialOpen(false)}
+      />
+
       {/* Lifecycle confirms — explicit labels so the delete wording never leaks */}
       <ConfirmDialog
         open={lifecycleAction === "receive"}
@@ -266,7 +304,11 @@ function DetailsHeader({
           {status}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

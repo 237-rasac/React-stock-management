@@ -3,6 +3,15 @@
   "subtitle": "Restocking from your suppliers",
   "listTitle": "List",
   "createTitle": "New order",
+  "createDescription": "Select a supplier and the items to order.",
+  "createSubmit": "Create order",
+  "createLinesHint": "Prices and total are calculated by the server.",
+  "addLine": "Add line",
+  "removeLine": "Remove line",
+  "selectSupplier": "Select a supplier",
+  "selectArticle": "Select an article",
+  "allStatuses": "All statuses",
+  "statusFilter": "Filter by status",
   "detailTitle": "Order details",
   "search": "Search an order…",
   "actions": "Actions",
@@ -25,6 +34,7 @@
   "linesCount_other": "{{count}} items",
   "status": {
     "EN_ATTENTE": "Pending",
+    "RECUE_PARTIELLEMENT": "Partially received",
     "RECUE": "Received",
     "ANNULEE": "Cancelled"
   },
@@ -37,6 +47,16 @@
   "toast": {
     "created": "Order created",
     "received": "Receipt created — stock updated",
-    "cancelled": "Order cancelled"
+    "cancelled": "Order cancelled",
+    "receivedPartial": "Partial reception recorded — stock updated"
+  },
+  "reception": {
+    "cta": "Partial reception",
+    "title": "Partial reception",
+    "description": "Enter the quantity actually received for each line. Only those quantities are credited to stock.",
+    "submit": "Record reception",
+    "quantityLabel": "Received",
+    "lineSummary": "Ordered {{ordered}} · already received {{received}} · outstanding {{outstanding}}",
+    "total": "{{count}} item(s) to receive"
   }
 }

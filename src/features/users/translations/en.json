@@ -23,6 +23,7 @@
     "passwordHint": "At least 6 characters — communicate it to the user"
   },
   "role": {
+    "SUPER_ADMIN": "Super administrator",
     "ADMIN": "Administrator",
     "GESTIONNAIRE": "Manager",
     "VENDEUR": "Sales clerk"

@@ -12,9 +12,13 @@
     "test": "vitest run",
     "test:run": "vitest run",
     "lint:fix": "oxlint src --fix",
-    "prepare": "husky",
+    "prepare": "husky && node scripts/gen-cities.mjs",
     "test:live": "vitest run src/live",
-    "audit:i18n": "node scripts/audit-i18n.mjs"
+    "audit:i18n": "node scripts/audit-i18n.mjs",
+    "gen:cities": "node scripts/gen-cities.mjs",
+    "predev": "node scripts/gen-cities.mjs",
+    "prebuild": "node scripts/gen-cities.mjs",
+    "audit:endpoints": "node scripts/audit-endpoints.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -22,10 +26,12 @@
     "@tanstack/react-table": "^9.2.4",
     "axios": "^1.20.0",
     "clsx": "^2.1.1",
+    "country-state-city": "^3.2.1",
     "date-fns": "^4.4.0",
     "i18next": "^23.16.8",
     "i18next-browser-languagedetector": "^8.2.1",
     "i18next-http-backend": "^2.7.3",
+    "libphonenumber-js": "^1.13.13",
     "lucide-react": "^1.46.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

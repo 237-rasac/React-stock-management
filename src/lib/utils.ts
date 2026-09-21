@@ -1,21 +1,57 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { CURRENCY, LOCALE } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Money, in the app's currency unless one is passed explicitly.
+ *
+ * The fraction-digit count is deliberately left to Intl: it knows each
+ * currency's real precision (EUR → 2 decimals, XAF → 0). Hard-coding 2 used
+ * to print "706 664,00 FCFA", which is not how francs CFA are written.
+ */
 export function formatCurrency(
   amount: number,
-  currency = "EUR",
-  locale = "fr-FR",
+  currency: string = CURRENCY,
+  locale: string = LOCALE,
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
   }).format(amount);
+}
+
+/**
+ * How the currency is written next to an amount. Intl knows the local
+ * convention (XAF → "FCFA" in French, EUR → "€"); the code is the fallback.
+ */
+export function currencySymbol(currency: string = CURRENCY): string {
+  try {
+    const parts = new Intl.NumberFormat(LOCALE, {
+      style: "currency",
+      currency,
+    }).formatToParts(0);
+    return parts.find((part) => part.type === "currency")?.value ?? currency;
+  } catch {
+    return currency;
+  }
+}
+
+/** How many decimals this currency actually uses (EUR → 2, XAF → 0). */
+export function currencyDecimals(currency: string = CURRENCY): number {
+  try {
+    return (
+      new Intl.NumberFormat(LOCALE, {
+        style: "currency",
+        currency,
+      }).resolvedOptions().maximumFractionDigits ?? 2
+    );
+  } catch {
+    return 2;
+  }
 }
 
 export function formatNumber(value: number, locale = "fr-FR"): string {

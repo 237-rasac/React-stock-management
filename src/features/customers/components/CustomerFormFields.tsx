@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { FormField } from "@/components/forms/FormFields";
+import { PhoneField } from "@/components/forms/LocationFields";
 
 interface CustomerFormFieldsProps<T extends FieldValues> {
   control: Control<T>;
@@ -22,68 +23,36 @@ export function CustomerFormFields<T extends FieldValues>({
   const label = (key: string): string => t(`${labelPrefix}.${key}`) as string;
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField
-          name={"firstName" as Path<T>}
-          control={control}
-          label={label("firstName")}
-          required
-        />
-        <FormField
-          name={"lastName" as Path<T>}
-          control={control}
-          label={label("lastName")}
-          required
-        />
-      </div>
+    <div className="flex flex-col gap-4">
       <FormField
-        name={"addressLine1" as Path<T>}
+        name={"firstName" as Path<T>}
         control={control}
-        label={label("addressLine1")}
+        label={label("firstName")}
+        required
       />
       <FormField
-        name={"addressLine2" as Path<T>}
+        name={"lastName" as Path<T>}
         control={control}
-        label={label("addressLine2")}
+        label={label("lastName")}
+        required
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField
-          name={"postalCode" as Path<T>}
-          control={control}
-          label={label("postalCode")}
-        />
-        <FormField
-          name={"city" as Path<T>}
-          control={control}
-          label={label("city")}
-        />
-      </div>
       <FormField
-        name={"country" as Path<T>}
+        name={"city" as Path<T>}
         control={control}
-        label={label("country")}
+        label={label("city")}
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField
-          name={"email" as Path<T>}
-          control={control}
-          label={label("email")}
-          type="email"
-        />
-        <FormField
-          name={"phone" as Path<T>}
-          control={control}
-          label={label("phone")}
-          type="tel"
-        />
-      </div>
       <FormField
-        name={"photo" as Path<T>}
+        name={"email" as Path<T>}
         control={control}
-        label={label("photo")}
-        helperText="https://…"
+        label={label("email")}
+        type="email"
       />
-    </>
+      <PhoneField
+        name={"phone" as Path<T>}
+        countryFieldName={"country" as Path<T>}
+        control={control}
+        label={label("phone")}
+      />
+    </div>
   );
 }

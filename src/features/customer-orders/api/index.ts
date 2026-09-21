@@ -50,6 +50,22 @@ export const CustomerOrdersApi = {
     return toCustomerOrder(res.data);
   },
 
+  /** PUT /{id}/expedier — VALIDEE → EXPEDIEE. */
+  ship: async (id: string): Promise<CustomerOrder> => {
+    const res = await apiClient.put<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDER_SHIP(id),
+    );
+    return toCustomerOrder(res.data);
+  },
+
+  /** PUT /{id}/livrer — EXPEDIEE → LIVREE (terminal). */
+  deliver: async (id: string): Promise<CustomerOrder> => {
+    const res = await apiClient.put<CommandeClientResponseDTO>(
+      API_ENDPOINTS.CUSTOMER_ORDER_DELIVER(id),
+    );
+    return toCustomerOrder(res.data);
+  },
+
   /** PUT /{id}/annuler — allowed only while the order is EN_COURS. */
   cancel: async (id: string): Promise<CustomerOrder> => {
     const res = await apiClient.put<CommandeClientResponseDTO>(

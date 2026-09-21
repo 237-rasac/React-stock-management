@@ -28,6 +28,30 @@ describe("DataTable", () => {
     expect(screen.getByText("Marseille")).toBeInTheDocument();
   });
 
+  it("renders only the active page and moves the sixth row to page two", async () => {
+    const user = userEvent.setup();
+    const data = [
+      ...DATA,
+      { id: "4", name: "Dalia", city: "Nice" },
+      { id: "5", name: "Emeraude", city: "Dijon" },
+      { id: "6", name: "Fjord", city: "Lille" },
+    ];
+
+    render(
+      <DataTable<Row> data={data} columns={columns()} initialPageSize={5} />,
+    );
+
+    expect(screen.getByText("Emeraude")).toBeInTheDocument();
+    expect(screen.queryByText("Fjord")).not.toBeInTheDocument();
+    expect(screen.getByText(/pageInfo|Page 1 sur 2/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next|Suivant/i }));
+
+    expect(screen.getByText("Fjord")).toBeInTheDocument();
+    expect(screen.queryByText("Alphéa")).not.toBeInTheDocument();
+    expect(screen.getByText(/pageInfo|Page 2 sur 2/)).toBeInTheDocument();
+  });
+
   it("filters rows by the controlled global filter", async () => {
     render(
       <DataTable<Row> data={DATA} columns={columns()} globalFilter="lyon" />,

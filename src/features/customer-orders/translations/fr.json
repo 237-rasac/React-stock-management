@@ -3,6 +3,15 @@
   "subtitle": "Commandes passées par vos clients",
   "listTitle": "Liste",
   "createTitle": "Nouvelle commande",
+  "createDescription": "Sélectionnez un client et les articles à commander.",
+  "createSubmit": "Créer la commande",
+  "createLinesHint": "Les prix et le total sont calculés par le serveur.",
+  "addLine": "Ajouter une ligne",
+  "removeLine": "Supprimer la ligne",
+  "selectCustomer": "Sélectionner un client",
+  "selectArticle": "Sélectionner un article",
+  "allStatuses": "Tous les statuts",
+  "statusFilter": "Filtrer par statut",
   "detailTitle": "Détail de la commande",
   "search": "Rechercher une commande…",
   "actions": "Actions",
@@ -26,6 +35,8 @@
   "status": {
     "EN_COURS": "En cours",
     "VALIDEE": "Validée",
+    "EXPEDIEE": "Expédiée",
+    "LIVREE": "Livrée",
     "ANNULEE": "Annulée"
   },
   "validate": "Valider la commande",
@@ -38,6 +49,14 @@
   "toast": {
     "created": "Commande créée",
     "validated": "Commande validée — stock mis à jour",
-    "cancelled": "Commande annulée"
-  }
+    "cancelled": "Commande annulée",
+    "shipped": "Commande expédiée",
+    "delivered": "Commande livrée"
+  },
+  "ship": "Expédier",
+  "shipTitle": "Marquer cette commande comme expédiée ?",
+  "shipConfirm": "La commande passe en « Expédiée ». Le stock a déjà été décrémenté à la validation.",
+  "deliver": "Marquer livrée",
+  "deliverTitle": "Marquer cette commande comme livrée ?",
+  "deliverConfirm": "« Livrée » est l'état final de la commande : plus aucune action ne sera possible ensuite."
 }

@@ -38,5 +38,18 @@
     "empty": "Aucune alerte — tous les articles sont au-dessus du seuil.",
     "critical": "Critique",
     "low": "Stock bas"
-  }
+  },
+  "stockFlow": {
+    "title": "Entrées / sorties de stock",
+    "empty": "Aucun mouvement de stock sur la période.",
+    "entries": "Entrées",
+    "exits": "Sorties"
+  },
+  "topArticles": {
+    "title": "Meilleures ventes",
+    "empty": "Aucune vente enregistrée pour le moment.",
+    "sold": "{{formatted}} vendu(s)"
+  },
+  "subtitle": "Aperçu en temps réel de votre activité.",
+  "subtitleFor": "Aperçu en temps réel de l'activité de {{company}}."
 }

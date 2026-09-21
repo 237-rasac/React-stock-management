@@ -22,7 +22,8 @@
   "toast": {
     "created": "Company created",
     "updated": "Company updated",
-    "deleted": "Company deleted"
+    "deleted": "Company deleted",
+    "deleteConflict": "This company still has user accounts attached and cannot be deleted. Remove them first."
   },
   "adminOnly": "Administrators only",
   "adminOnlyHint": "This section requires the ADMIN role.",

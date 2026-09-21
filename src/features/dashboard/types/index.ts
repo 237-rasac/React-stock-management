@@ -70,3 +70,56 @@ export interface DashboardCharts {
   salesByDay: SalesByDayPoint[];
   stockValueByCategory: CategoryStockValue[];
 }
+
+/* ------------------------------------------------------------------ */
+/* GET /api/dashboard/graphiques — server-computed series              */
+/* ------------------------------------------------------------------ */
+
+/** One day of the stock-flow series — swagger `EntreeSortieJourDTO`. */
+export interface EntreeSortieJourDTO {
+  /** ISO date (yyyy-MM-dd). */
+  date?: string;
+  entrees?: number;
+  sorties?: number;
+}
+
+/** A best-selling article — swagger `TopArticleDTO`. */
+export interface TopArticleDTO {
+  articleId?: number;
+  designation?: string;
+  codeArticle?: string;
+  quantiteVendue?: number;
+  chiffreAffaires?: number;
+}
+
+/** Raw response of GET /api/dashboard/graphiques — `GraphiquesResponseDTO`. */
+export interface GraphiquesResponseDTO {
+  evolutionStock?: EntreeSortieJourDTO[];
+  topArticles?: TopArticleDTO[];
+}
+
+/** One point of the stock-flow chart, with a localized axis label. */
+export type StockFlowPoint = {
+  /** Raw ISO date, kept for sorting and tooltips. */
+  date: string;
+  /** Short weekday/day label for the X axis. */
+  label: string;
+  entries: number;
+  exits: number;
+};
+
+/** Domain model for a best-selling article. */
+export type TopArticle = {
+  /** int64 in swagger; kept as string domain-wide. */
+  id: string;
+  code: string;
+  designation: string;
+  quantitySold: number;
+  revenue: number;
+};
+
+/** Domain model for GET /api/dashboard/graphiques. */
+export type DashboardGraphs = {
+  stockFlow: StockFlowPoint[];
+  topArticles: TopArticle[];
+};

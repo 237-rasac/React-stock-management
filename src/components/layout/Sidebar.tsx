@@ -1,9 +1,10 @@
-import { NavLink, useNavigate } from "react-router";
+import { NavLink } from "react-router";
 import { useTranslation } from "react-i18next";
 import { langPath } from "@/lib/lang-path";
 import { useUIStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
-import { NAV_GROUPS } from "@/lib/navigation";
+import { useLogout } from "@/features/auth/hooks";
+import { navGroupsFor, landingPathFor } from "@/lib/navigation";
 import { hasAnyRole } from "@/lib/permissions";
 import { LogOut, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,8 +24,7 @@ export const Sidebar = () => {
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
   const closeSidebar = useUIStore((s) => s.closeSidebar);
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
+  const { mutate: handleLogout } = useLogout();
 
   // Navigation/role labels are DATA keys (common:layout.<labelKey>) — typed
   // t() only accepts literal keys, so dynamic lookups go through this cast.
@@ -37,13 +37,13 @@ export const Sidebar = () => {
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Utilisateur";
   const roleLabel = user?.roles?.[0]
-    ? tDynamic(`layout.role${cap(user.roles[0])}`)
+    ? tDynamic(`layout.role${roleKey(user.roles[0])}`)
     : undefined;
 
-  const handleLogout = () => {
-    logout();
-    navigate(langPath("/login"));
-  };
+  // A SUPER_ADMIN gets the platform console navigation instead of the tenant
+  // one — the two sidebars are disjoint, not additive.
+  const navGroups = navGroupsFor(user?.roles);
+  const homePath = landingPathFor(user?.roles);
 
   return (
     <>
@@ -72,7 +72,7 @@ export const Sidebar = () => {
         {/* Brand header */}
         <div className="flex h-[66px] shrink-0 items-center justify-between px-5">
           <NavLink
-            to={langPath("/dashboard")}
+            to={langPath(homePath)}
             className="flex items-center gap-2.5"
             onClick={closeSidebar}
           >
@@ -101,7 +101,7 @@ export const Sidebar = () => {
           className="sb-nav flex-1 overflow-y-auto px-3 pb-4"
           aria-label={t("layout.mainNavigation")}
         >
-          {NAV_GROUPS.map((group) => {
+          {navGroups.map((group) => {
             const items = group.items.filter(
               (item) => !item.roles || hasAnyRole(item.roles),
             );
@@ -197,7 +197,14 @@ export const Sidebar = () => {
   );
 };
 
-/** ADMIN → roleAdmin, GESTIONNAIRE → roleManager, VENDEUR → roleSeller. */
-function cap(role: string): string {
-  return role.charAt(0) + role.slice(1).toLowerCase();
+/**
+ * Role → i18n key suffix: ADMIN → "Admin", GESTIONNAIRE → "Manager",
+ * VENDEUR → "Seller", SUPER_ADMIN → "SuperAdmin" (the underscore would
+ * otherwise leak into the key as `roleSuper_admin`).
+ */
+function roleKey(role: string): string {
+  return role
+    .split("_")
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join("");
 }

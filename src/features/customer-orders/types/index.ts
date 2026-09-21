@@ -9,11 +9,31 @@
  *    sanity fallback but trusts the wire value when present.
  *  - Lines carry `prixUnitaire`/`sousTotal` read-only — the request sends only
  *    { articleId, quantite } and the backend prices the lines.
- *  - Lifecycle: create → EN_COURS; PUT /{id}/valider (409 if stock insufficient);
- *    PUT /{id}/annuler (only while EN_COURS). No delete endpoint.
+ *  - Lifecycle is linear and one-way:
+ *        EN_COURS ──valider──▶ VALIDEE ──expedier──▶ EXPEDIEE ──livrer──▶ LIVREE
+ *           └──annuler──▶ ANNULEE
+ *    `valider` generates the stock exits (409 if stock is insufficient) and
+ *    `annuler` is only accepted while the order is still EN_COURS.
+ *    There is no delete endpoint — cancellation is the terminal escape.
  */
 
-export type OrderStatus = "EN_COURS" | "VALIDEE" | "ANNULEE";
+export type OrderStatus =
+  "EN_COURS" | "VALIDEE" | "EXPEDIEE" | "LIVREE" | "ANNULEE";
+
+/**
+ * Which action each status allows, derived from the lifecycle above. Kept
+ * next to the type so a future status cannot silently gain every action.
+ */
+export const ORDER_TRANSITIONS: Record<
+  OrderStatus,
+  { validate: boolean; ship: boolean; deliver: boolean; cancel: boolean }
+> = {
+  EN_COURS: { validate: true, ship: false, deliver: false, cancel: true },
+  VALIDEE: { validate: false, ship: true, deliver: false, cancel: false },
+  EXPEDIEE: { validate: false, ship: false, deliver: true, cancel: false },
+  LIVREE: { validate: false, ship: false, deliver: false, cancel: false },
+  ANNULEE: { validate: false, ship: false, deliver: false, cancel: false },
+};
 
 /** Body of POST /api/commandes-client — swagger `CommandeClientRequestDTO`. */
 export interface CommandeClientRequestDTO {

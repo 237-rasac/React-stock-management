@@ -95,7 +95,7 @@ export const SalesPage = () => {
         searchPlaceholder={t("search")}
         actions={
           canSell && (
-            <Button onClick={() => setPosOpen(true)}>
+            <Button variant="gold" onClick={() => setPosOpen(true)}>
               <ShoppingCart className="h-4 w-4" />
               {t("posTitle")}
             </Button>

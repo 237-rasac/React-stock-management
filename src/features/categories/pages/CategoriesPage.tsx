@@ -73,10 +73,11 @@ export const CategoriesPage = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="group"
                     aria-label={t("confirmDelete")}
                     onClick={() => setDeleting(info.row.original)}
                   >
-                    <Trash2 className="h-4 w-4 text-danger-600 dark:text-danger-500" />
+                    <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
                   </Button>
                 </div>
               ),
@@ -115,6 +116,7 @@ export const CategoriesPage = () => {
         actions={
           canManage ? (
             <Button
+              variant="gold"
               onClick={() => {
                 setEditing(null);
                 setDialogOpen(true);
@@ -210,7 +212,7 @@ function EmptyCategories({
         {t("subtitle")}
       </p>
       {canManage && (
-        <Button onClick={onCreate}>
+        <Button variant="gold" onClick={onCreate}>
           <Plus className="h-4 w-4" />
           {t("createTitle")}
         </Button>

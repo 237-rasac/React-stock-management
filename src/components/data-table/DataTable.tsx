@@ -83,6 +83,8 @@ export interface DataTableProps<TData> {
   hideHeader?: boolean;
   /** Optional search input binding (controlled global filter). */
   globalFilter?: string;
+  /** Optional row navigation handler. */
+  onRowClick?: (row: TData) => void;
   className?: string;
 }
 
@@ -96,6 +98,7 @@ export function DataTable<TData extends RowData>({
   initialPageSize = 10,
   hideHeader = false,
   globalFilter,
+  onRowClick,
   className,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -152,7 +155,8 @@ export function DataTable<TData extends RowData>({
     );
   }
 
-  const rows = table.getFilteredRowModel().rows;
+  const filteredRows = table.getFilteredRowModel().rows;
+  const rows = table.getRowModel().rows;
   return (
     <div
       className={cn(
@@ -238,7 +242,19 @@ export function DataTable<TData extends RowData>({
               rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-surface-hover dark:hover:bg-[color:var(--dark-surface-hover)]"
+                  className={cn(
+                    "border-b border-border transition-colors last:border-0 hover:bg-surface-hover dark:hover:bg-[color:var(--dark-surface-hover)]",
+                    onRowClick && "cursor-pointer",
+                  )}
+                  onClick={() => onRowClick?.(row.original)}
+                  onKeyDown={(event) => {
+                    if (!onRowClick) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onRowClick(row.original);
+                    }
+                  }}
+                  tabIndex={onRowClick ? 0 : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 text-content">
@@ -259,7 +275,7 @@ export function DataTable<TData extends RowData>({
           pageIndex={table.state.pagination.pageIndex}
           pageSize={table.state.pagination.pageSize}
           pageCount={Math.max(1, table.getPageCount())}
-          totalItems={rows.length}
+          totalItems={filteredRows.length}
           onPageChange={(index) => table.setPageIndex(index)}
           onPageSizeChange={(size) => table.setPageSize(size)}
         />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toLocationDefaults } from "@/lib/countries";
 import { useParams, Link } from "react-router";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -170,9 +171,8 @@ export const CustomerDetailsPage = () => {
           addressLine2: customer.addressLine2 ?? "",
           city: customer.city ?? "",
           postalCode: customer.postalCode ?? "",
-          country: customer.country ?? "",
+          ...toLocationDefaults(customer.country, customer.phone),
           email: customer.email ?? "",
-          phone: customer.phone ?? "",
           photo: customer.photo ?? "",
         }}
         onSubmit={handleSubmit}

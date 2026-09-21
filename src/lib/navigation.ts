@@ -80,13 +80,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     labelKey: "groupOrganization",
     items: [
-      {
-        key: "companies",
-        labelKey: "navCompanies",
-        href: "/companies",
-        icon: Building2,
-        roles: ["ADMIN"],
-      },
+      // NOTE: «Entreprises» deliberately does NOT live here. A company ADMIN is
+      // bound to exactly one tenant and must never create or browse others —
+      // that is the SUPER_ADMIN's job, see PLATFORM_NAV_GROUPS below.
       {
         key: "users",
         labelKey: "navUsers",
@@ -143,3 +139,51 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+/**
+ * Platform console navigation — SUPER_ADMIN only.
+ *
+ * The platform operator owns no catalog, stock or sales: those belong to a
+ * tenant. Their sidebar therefore replaces the whole app navigation rather
+ * than extending it, which is why this is a separate list and not extra
+ * role-gated entries inside NAV_GROUPS.
+ */
+export const PLATFORM_NAV_GROUPS: NavGroup[] = [
+  {
+    labelKey: "groupPlatform",
+    items: [
+      {
+        key: "platform-overview",
+        labelKey: "navPlatformOverview",
+        href: "/platform",
+        icon: LayoutDashboard,
+        end: true,
+      },
+      {
+        key: "platform-companies",
+        labelKey: "navPlatformCompanies",
+        href: "/platform/companies",
+        icon: Building2,
+      },
+    ],
+  },
+];
+
+/** True when the user operates the platform instead of belonging to a tenant. */
+export function isPlatformRole(roles: readonly string[] | undefined): boolean {
+  return !!roles?.includes("SUPER_ADMIN");
+}
+
+/** The sidebar a user should see, decided solely by their role. */
+export function navGroupsFor(roles: readonly string[] | undefined): NavGroup[] {
+  return isPlatformRole(roles) ? PLATFORM_NAV_GROUPS : NAV_GROUPS;
+}
+
+/**
+ * Where a user lands after login (and where "/" resolves to for them):
+ * the platform console for a SUPER_ADMIN, the tenant dashboard for everyone
+ * else. Paths are app-absolute — callers prefix them with langPath().
+ */
+export function landingPathFor(roles: readonly string[] | undefined): string {
+  return isPlatformRole(roles) ? "/platform" : "/dashboard";
+}

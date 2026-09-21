@@ -10,18 +10,27 @@ import {
   formatPaymentStatus,
 } from "./formatters";
 
+/** fr-FR separates groups and the symbol with non-breaking spaces. */
+const plain = (value: string): string => value.replace(/ | /g, " ");
+
 describe("formatCurrency", () => {
-  it("formats EUR with 2 decimals in fr-FR", () => {
-    // fr-FR uses a non-breaking space before the symbol — normalize for the assertion.
-    const out = formatCurrency(1234.5).replace(/\u202f|\u00a0/g, " ");
-    expect(out).toMatch(/1[,\u202f\u00a0 ]?234[.,]50/);
+  it("defaults to the app currency (franc CFA) with NO decimals", () => {
+    // XAF is a zero-decimal currency: "1 235 FCFA", never "1 234,50 FCFA".
+    const out = plain(formatCurrency(1234.5));
+    expect(out).toMatch(/1 235/);
+    expect(out).not.toMatch(/[.,]\d\d/);
+    expect(out).toContain("FCFA");
+  });
+
+  it("keeps each currency's own precision when one is passed", () => {
+    const out = plain(formatCurrency(1234.5, "EUR"));
+    expect(out).toMatch(/1 234[.,]50/);
     expect(out).toContain("€");
   });
 
   it("formats zero and negative amounts", () => {
     expect(formatCurrency(0)).toContain("0");
-    const neg = formatCurrency(-42).replace(/\u202f|\u00a0/g, " ");
-    expect(neg).toContain("-");
+    expect(plain(formatCurrency(-42))).toContain("-");
   });
 });
 

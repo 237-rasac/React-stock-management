@@ -8,6 +8,8 @@
   "search": "Rechercher",
   "filter": "Filtrer",
   "allCategories": "Toutes les catégories",
+  "allStatuses": "Tous les statuts",
+  "statusFilter": "Filtrer par statut",
   "actions": "Actions",
   "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
   "stock": {
@@ -36,5 +38,6 @@
     "created": "Article créé",
     "updated": "Article mis à jour",
     "deleted": "Article supprimé"
-  }
+  },
+  "vatHint": "Taux standard au Cameroun : 19,25 %"
 }

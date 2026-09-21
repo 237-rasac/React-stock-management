@@ -38,6 +38,18 @@ describe("toArticle (DTO → domain)", () => {
     expect(article.unitPriceTtc).toBeCloseTo(120);
   });
 
+  it("normalizes an empty photo so edit forms can submit", () => {
+    const article = toArticle({
+      id: 6,
+      codeArticle: "EMPTY-PHOTO",
+      designation: "Sans photo",
+      prixUnitaireHt: 1,
+      tauxTva: 0,
+      photo: "   ",
+    });
+    expect(article.photo).toBeUndefined();
+  });
+
   it("defaults optional backend omissions", () => {
     const article = toArticle({
       id: 5,

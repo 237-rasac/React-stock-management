@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { authApi, isUnauthorized } from "../api";
 import { useAuthStore } from "@/stores/auth.store";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { clearTokens, getAccessToken } from "@/api/tokens";
 
 /**
  * Auth bootstrap (P0.4) — runs once on app mount inside ProtectedRoute:
@@ -22,7 +22,7 @@ export function useAuthBootstrap(): void {
   useEffect(() => {
     let cancelled = false;
 
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = getAccessToken();
     if (!token) {
       // Fresh visitor (or purged session) — nothing to restore.
       useAuthStore.setState({ hasBootstrapped: true });
@@ -39,8 +39,7 @@ export function useAuthBootstrap(): void {
         } else {
           // 401: the interceptor purges storage + redirects on API calls, but
           // /auth/me swallows its own 401 → purge here so nothing stale stays.
-          localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
+          clearTokens();
           setUser(null);
         }
       })
@@ -50,9 +49,7 @@ export function useAuthBootstrap(): void {
         // the stale session instead of keeping the persisted user, otherwise
         // the shell renders authenticated while every API call fails.
         if (isUnauthorized(error)) {
-          localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
-          localStorage.removeItem(STORAGE_KEYS.AUTH_STORAGE);
+          clearTokens();
           useAuthStore.setState({ user: null, isAuthenticated: false });
           return;
         }

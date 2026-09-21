@@ -2,10 +2,17 @@ import axios, {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
+  AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
 import type { ApiError } from "./interceptors";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { API_ENDPOINTS } from "@/lib/constants";
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  storeTokens,
+} from "./tokens";
 
 /**
  * Session-invalid detection.
@@ -13,9 +20,9 @@ import { STORAGE_KEYS } from "@/lib/constants";
  * This backend signals a missing/expired/invalid JWT with **403 and an empty
  * body** (Spring Security's default `AccessDeniedHandler` output), not 401:
  * verified by probing the live server with no token and with a bogus token.
- * A *business* 403 (authenticated but not allowed) always carries a JSON body
- * with a `message`, so an empty-body 403 is a reliable "your session is dead"
- * signal that the client can react to.
+ * A *business* 403 (authenticated but not allowed) also arrives with an empty
+ * body on some endpoints, which is why an ambiguous 403 is confirmed with a
+ * bare `/auth/me` probe before the session is touched.
  *
  * ⚠ Deployed dev note: the backend also omits CORS headers on these 403s, so
  * when the frontend talks to the API cross-origin (no Vite proxy), the browser
@@ -33,15 +40,26 @@ function isSessionInvalid(error: AxiosError): boolean {
   return false;
 }
 
-/**
- * API client (P0.4) — swagger v1.0 has no refresh endpoint: the JWT is the
- * only credential. On a 401 the session is purged and the user is sent to
- * /login (the token cannot be renewed client-side).
- */
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081/api";
+
+/** Internal request flags — never sent to the backend. */
+type TaggedConfig = AxiosRequestConfig & {
+  /** The bare /auth/me call used to tell a dead token from a business 403. */
+  __sessionProbe?: boolean;
+  /** Set once a request has already been replayed after a token refresh. */
+  __retried?: boolean;
+};
 
 class ApiClient {
   private client: AxiosInstance;
+
+  /**
+   * In-flight refresh, shared by every request that hits an expired token at
+   * the same time. The backend ROTATES refresh tokens, so two parallel
+   * refreshes would make the second one fail and kill a healthy session —
+   * they must all await the same call.
+   */
+  private refreshInFlight: Promise<string> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -63,7 +81,7 @@ class ApiClient {
   private setupInterceptors(): void {
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        const token = getAccessToken();
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -75,25 +93,24 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
+        const config = error.config as TaggedConfig | undefined;
+
         // Results of the session probe land here — normalize and reject.
-        if (
-          (error.config as { __sessionProbe?: boolean } | undefined)
-            ?.__sessionProbe
-        ) {
+        if (config?.__sessionProbe) {
           return Promise.reject(this.normalizeError(error));
         }
 
-        // Session possibly invalid (401, or the backend's empty-body 403).
-        // A business 403 ALSO has an empty body on this backend (e.g. creating
-        // an article with an invalid categoryId), so before purging the
-        // session, confirm with a bare /auth/me probe: only a failing probe
-        // proves the token is dead. /auth/me callers are excluded (they treat
-        // auth failures themselves).
-        if (
-          isSessionInvalid(error) &&
-          !error.config?.url?.includes("/auth/me")
-        ) {
-          return this.handlePossibleAuthFailure(error);
+        // Auth endpoints own their failures: a bad password or a dead refresh
+        // token must surface to the caller, not trigger recovery machinery.
+        const url = config?.url ?? "";
+        const isAuthEndpoint =
+          url.includes(API_ENDPOINTS.AUTH.ME) ||
+          url.includes(API_ENDPOINTS.AUTH.LOGIN) ||
+          url.includes(API_ENDPOINTS.AUTH.REFRESH) ||
+          url.includes(API_ENDPOINTS.AUTH.LOGOUT);
+
+        if (isSessionInvalid(error) && !isAuthEndpoint && !config?.__retried) {
+          return this.recoverSession(error);
         }
 
         return Promise.reject(this.normalizeError(error));
@@ -102,26 +119,91 @@ class ApiClient {
   }
 
   /**
-   * Confirm an ambiguous (empty-body) 403 with a bare /auth/me call before
-   * destroying the session. If the probe succeeds the token is still valid —
-   * the original error was a business 403 and must NOT log the user out.
+   * Handle an ambiguous (empty-body) 403 / 401 in three steps:
+   *
+   *   1. Probe `/auth/me`. If it succeeds the access token is still valid, so
+   *      the original error was a *business* 403 — surface it untouched and
+   *      never log the user out.
+   *   2. The token is dead → exchange the refresh token for a new pair and
+   *      replay the original request once.
+   *   3. No refresh token, or the refresh was rejected → the session is
+   *      genuinely over: purge credentials and send the user to /login.
    */
-  private async handlePossibleAuthFailure(error: AxiosError): Promise<never> {
-    try {
-      await this.client.get("/auth/me", {
-        __sessionProbe: true,
-      } as AxiosRequestConfig & { __sessionProbe?: boolean });
-      // Probe OK → session alive; surface the original business error only.
-    } catch {
-      this.handleAuthFailure();
+  private async recoverSession(error: AxiosError): Promise<AxiosResponse> {
+    // 1. Is the access token actually dead, or was this a business denial?
+    if (!(await this.isTokenDead())) {
+      throw this.normalizeError(error);
     }
+
+    // 2. Dead token → rotate it and replay the original call once. The caller
+    //    receives the replayed response and never learns about the renewal.
+    const config = error.config as TaggedConfig | undefined;
+    if (config && getRefreshToken()) {
+      try {
+        const token = await this.refreshSession();
+        config.__retried = true;
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${token}`,
+        } as AxiosRequestConfig["headers"];
+        return await this.client.request(config);
+      } catch {
+        // Refresh rejected or the replay failed → the session is over.
+      }
+    }
+
+    // 3. Nothing left to try.
+    this.handleAuthFailure();
     throw this.normalizeError(error);
   }
 
+  /**
+   * True when a bare `/auth/me` is rejected for auth reasons, i.e. the access
+   * token can no longer be used. A *network* failure answers false: losing
+   * connectivity must never be mistaken for an expired session.
+   */
+  private async isTokenDead(): Promise<boolean> {
+    try {
+      await this.client.get(API_ENDPOINTS.AUTH.ME, {
+        __sessionProbe: true,
+      } as TaggedConfig);
+      return false;
+    } catch (probeError) {
+      const status = (probeError as ApiError)?.status;
+      return status === 401 || status === 403;
+    }
+  }
+
+  /**
+   * POST /auth/refresh, de-duplicated across concurrent callers.
+   * Resolves with the new access token; rejects when the session is over.
+   */
+  private refreshSession(): Promise<string> {
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return Promise.reject(new Error("No refresh token"));
+
+    this.refreshInFlight = this.client
+      .post<{ token: string; refreshToken: string }>(
+        API_ENDPOINTS.AUTH.REFRESH,
+        { refreshToken },
+      )
+      .then((response) => {
+        const { token, refreshToken: rotated } = response.data;
+        if (!token) throw new Error("Refresh returned no token");
+        storeTokens(token, rotated);
+        return token;
+      })
+      .finally(() => {
+        this.refreshInFlight = null;
+      });
+
+    return this.refreshInFlight;
+  }
+
   private handleAuthFailure(): void {
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_STORAGE);
+    clearTokens();
 
     // Keep the URL language segment across the hard redirect.
     const seg = window.location.pathname.split("/")[1];

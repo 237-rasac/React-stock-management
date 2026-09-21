@@ -1,3 +1,4 @@
+import { DEFAULT_COUNTRY, toE164, type CountryCode } from "@/lib/countries";
 import type {
   ClientRequestDTO,
   ClientResponseDTO,
@@ -31,9 +32,13 @@ export function toClientRequest(input: CustomerWrite): ClientRequestDTO {
     adresse2: input.addressLine2 || undefined,
     ville: input.city || undefined,
     codePostal: input.postalCode || undefined,
-    pays: input.country || undefined,
+    pays: (input.country || undefined) as CountryCode | undefined,
     mail: input.email || undefined,
-    numTel: input.phone || undefined,
+    // The phone control displays a default country when none is selected,
+    // so the number is composed against that same country.
+    numTel: input.phone
+      ? toE164(input.phone, (input.country || DEFAULT_COUNTRY) as CountryCode)
+      : undefined,
     photo: input.photo || undefined,
   };
 }

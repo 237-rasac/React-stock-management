@@ -1,7 +1,7 @@
 import type { AuthUser, CurrentUserResponseDTO, UserInfoDTO } from "../types";
 
 /**
- * DTO → domain mappers for the auth feature (P0.4).
+ * DTO → domain mappers for the auth feature.
  * int64 id → string; single backend role → roles array for gating helpers.
  */
 
@@ -11,10 +11,14 @@ export function toAuthUser(dto: UserInfoDTO): AuthUser {
     login: dto.login,
     firstName: dto.prenom,
     lastName: dto.nom,
-    email: dto.login, // LoginResponse carries no mail; /auth/me refines it.
+    email: dto.login, // AuthTokensDTO carries no mail; /auth/me refines it.
     roles: [dto.role],
+    // SUPER_ADMIN has no company — the field is simply absent for them.
     companyId:
-      dto.entrepriseId !== undefined ? String(dto.entrepriseId) : undefined,
+      dto.entrepriseId !== undefined && dto.entrepriseId !== null
+        ? String(dto.entrepriseId)
+        : undefined,
+    companyName: dto.entrepriseNom,
   };
 }
 

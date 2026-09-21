@@ -22,7 +22,8 @@
   "toast": {
     "created": "Entreprise créée",
     "updated": "Entreprise mise à jour",
-    "deleted": "Entreprise supprimée"
+    "deleted": "Entreprise supprimée",
+    "deleteConflict": "Impossible de supprimer cette entreprise : des comptes utilisateurs y sont encore rattachés. Supprimez-les d’abord."
   },
   "adminOnly": "Accès réservé aux administrateurs",
   "adminOnlyHint": "Cette section nécessite le rôle ADMIN.",

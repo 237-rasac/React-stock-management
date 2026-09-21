@@ -28,6 +28,8 @@ interface AuthState {
   logout: () => void;
 
   hasRole: (role: UserRole) => boolean;
+  /** Platform operator (no tenant) — drives the sidebar and landing route. */
+  isSuperAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -53,6 +55,8 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       hasRole: (role) => get().user?.roles.includes(role) ?? false,
+
+      isSuperAdmin: () => get().user?.roles.includes("SUPER_ADMIN") ?? false,
     }),
     {
       name: "auth-storage",

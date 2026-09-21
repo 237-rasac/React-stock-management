@@ -2,7 +2,23 @@
 
 **Source design:** `public/SGS_maquette_demo (1).html` (v2 design tokens, light-only mockup)
 **Codebase:** `sgs-app` (React 19 + TS + Vite + Tailwind CSS v4, feature-based architecture)
-**Date:** 2026-09-16
+**Date:** 2026-09-16 · **Implementation update:** 2026-09-21
+
+> The audit below began as a gap analysis against the static design. The implementation has since completed the major shared UI and feature work listed in this update. Where the historical specifications below still say “Needs Creation” or “placeholder”, the current repository status takes precedence.
+
+## Current implementation status
+
+- **Design system:** token-based SGS palette is active in light and dark mode. Gold primary CTAs are used for creation actions; danger red is used for delete hover and confirmation actions.
+- **Shell and forms:** responsive header/sidebar/layout, dialogs, translated forms and dark-mode surfaces are in use. Customer and supplier forms are single-column; their phone input is a shared composite country-code + number control.
+- **Tables:** the shared `DataTable` supports filtering, sorting, active-page pagination, centered pagination controls, empty/loading states and optional keyboard-accessible row clicks. The pagination bug where rows from page two appeared on page one is fixed.
+- **Feature pages:** articles, categories, companies, users, customers and suppliers have implemented API-backed pages and forms. Articles include stock status and status filtering; optional empty photos no longer block edits.
+- **Orders:** customer and supplier order creation, status filters, detail pages, row-click navigation and lifecycle actions are implemented against the Swagger endpoints. Customer orders validate/ship/deliver/cancel; supplier orders receive/partially receive/cancel.
+- **Contract verification:** list APIs no longer send undocumented query parameters or envelope types. VAT conversion is verified live (`vatRate` decimal in the domain, `tauxTva` percentage on the wire).
+- **Verification:** TypeScript typecheck passes; the current unit/component suite reports 111 passing tests, with live tests opt-in.
+
+### Current reference implementation
+
+For the catalogue table, the intended implemented pattern is: page eyebrow and title, responsive gold “Nouvel article” action, search/filter toolbar, token-based table surface, status/stock badges, edit/delete row actions and shared pagination. The same interaction and styling rules are reused by the other CRUD and order tables.
 
 ---
 

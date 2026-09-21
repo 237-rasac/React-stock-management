@@ -1,42 +1,32 @@
 import apiClient from "@/api/client";
-import { API_ENDPOINTS, STORAGE_KEYS } from "@/lib/constants";
+import { clearTokens, getRefreshToken, storeTokens } from "@/api/tokens";
+import { API_ENDPOINTS } from "@/lib/constants";
 import { toAuthUser, toAuthUserFromMe } from "./mappers";
-import type {
-  AuthUser,
-  CurrentUserResponseDTO,
-  LoginResponseDTO,
-} from "../types";
+import type { AuthTokensDTO, AuthUser, CurrentUserResponseDTO } from "../types";
 
 /**
- * Auth API — pinned to swagger.json (P0.4):
- *   POST /api/auth/login → LoginResponse { token, user }   (200 | 403)
- *   GET  /api/auth/me    → CurrentUserResponse             (200 | 401)
+ * Auth API — pinned to swagger.json:
+ *   POST /api/auth/login   → AuthTokensDTO { token, refreshToken, user }
+ *   POST /api/auth/refresh → AuthTokensDTO  (token rotation)
+ *   POST /api/auth/logout  → 204            (revokes the refresh token)
+ *   GET  /api/auth/me      → CurrentUserResponse
  *
- * swagger v1.0 has NO /auth/refresh and NO /auth/logout — the JWT is the
- * only credential and logout is purely client-side (token purge).
- * /auth/register is admin-only user creation → Users feature (P3.3).
- *
- * Token storage: the token is written ONLY to localStorage (`STORAGE_KEYS.
- * ACCESS_TOKEN`) — the single source of truth the axios interceptor reads.
- * The user object goes to the zustand store (persisted for fast hydration).
+ * Token storage lives in `@/api/tokens` — the same module the axios
+ * interceptor reads, so there is exactly one source of truth. Silent renewal
+ * on an expired access token is handled by the interceptor, not here; this
+ * module only covers the explicit flows (login, logout).
  */
-
-/** Storage write helper — keeps the key in one place (constants.ts). */
-function storeToken(token: string): void {
-  localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-}
-
 export const authApi = {
-  /** Login and persist the token; returns the mapped domain user. */
+  /** Login and persist both tokens; returns the mapped domain user. */
   login: async (credentials: {
     login: string;
     motDePasse: string;
   }): Promise<AuthUser> => {
-    const res = await apiClient.post<LoginResponseDTO>(
+    const res = await apiClient.post<AuthTokensDTO>(
       API_ENDPOINTS.AUTH.LOGIN,
       credentials,
     );
-    storeToken(res.data.token);
+    storeTokens(res.data.token, res.data.refreshToken);
     return toAuthUser(res.data.user);
   },
 
@@ -57,10 +47,21 @@ export const authApi = {
     }
   },
 
-  /** Client-side logout: purge the token (no backend endpoint in swagger). */
-  logout: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
+  /**
+   * Revoke the refresh token server-side, then purge local credentials.
+   * The endpoint is idempotent and its failure must never strand the user in
+   * a half-logged-in state, so network errors are swallowed on purpose.
+   */
+  logout: async (): Promise<void> => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, { refreshToken });
+      } catch {
+        // Already revoked, expired, or offline — local purge is what matters.
+      }
+    }
+    clearTokens();
   },
 };
 

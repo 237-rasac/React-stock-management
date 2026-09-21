@@ -2,6 +2,8 @@ import { Menu, Bell, LogOut, User, Settings, ChevronDown } from "lucide-react";
 import { useNavigate, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/auth.store";
+import { useLogout } from "@/features/auth/hooks";
+import { isPlatformRole } from "@/lib/navigation";
 import { langPath } from "@/lib/lang-path";
 import { useUIStore } from "@/stores/ui.store";
 import { useNotifications } from "@/features/notifications/hooks";
@@ -18,13 +20,10 @@ import { Avatar } from "@/components/ui/Avatar";
 export const Header = () => {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
 
-  const handleLogout = () => {
-    logout();
-    navigate(langPath("/login"));
-  };
+  const { mutate: handleLogout } = useLogout();
 
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
@@ -32,7 +31,13 @@ export const Header = () => {
   const canManage =
     user?.roles?.includes("ADMIN") || user?.roles?.includes("GESTIONNAIRE");
 
+  // Global search and notifications both fan out to TENANT resources
+  // (/articles, /clients, /commandes-*, /notifications). A SUPER_ADMIN
+  // belongs to no tenant, so those controls would only produce 403s.
+  const isPlatform = isPlatformRole(user?.roles);
+
   const roleNames: Record<string, string> = {
+    SUPER_ADMIN: t("layout.roleSuperAdmin"),
     ADMIN: t("layout.roleAdmin"),
     GESTIONNAIRE: t("layout.roleManager"),
     VENDEUR: t("layout.roleSeller"),
@@ -52,14 +57,16 @@ export const Header = () => {
 
         {/* Mockup `.tb-search`: pinned to the left of the topbar (after the
             hamburger), fixed max-width, spacer pushes controls right. */}
-        <div className="w-full max-w-full flex-1 min-w-0 sm:max-w-[420px] sm:flex-none">
-          <GlobalSearch />
-        </div>
+        {!isPlatform && (
+          <div className="w-full max-w-full flex-1 min-w-0 sm:max-w-[420px] sm:flex-none">
+            <GlobalSearch />
+          </div>
+        )}
 
         <div className="ml-auto flex items-center gap-1">
           <LanguageSwitcher />
           <ThemeSwitcher />
-          <NotificationBell />
+          {!isPlatform && <NotificationBell />}
 
           <div className="group relative">
             <button

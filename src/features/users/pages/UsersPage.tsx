@@ -7,6 +7,7 @@ import {
   BadgeCell,
 } from "@/components/data-table";
 import type { UserRecord } from "../types";
+import type { UserRole } from "@/features/auth/types";
 import type { UserCreateFormData, UserEditFormData } from "../schemas";
 import { UserCreateSchema, UserEditSchema } from "../schemas";
 import {
@@ -25,10 +26,22 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 /** Role → badge color (ADMIN gold, GESTIONNAIRE info, VENDEUR secondary). */
 const ROLE_VARIANT = {
+  SUPER_ADMIN: "danger",
   ADMIN: "gold",
   GESTIONNAIRE: "info",
   VENDEUR: "secondary",
 } as const;
+
+/**
+ * Roles a company ADMIN may assign. SUPER_ADMIN is a platform-level account
+ * created outside any tenant, so it is never offered here — and if one ever
+ * surfaced in this list, editing it falls back to ADMIN rather than silently
+ * sending an unassignable role.
+ */
+type AssignableRole = Exclude<UserRole, "SUPER_ADMIN">;
+
+const assignableRole = (role: UserRole): AssignableRole =>
+  role === "SUPER_ADMIN" ? "ADMIN" : role;
 
 type DialogMode =
   { kind: "create" } | { kind: "edit"; user: UserRecord } | null;
@@ -126,12 +139,13 @@ export const UsersPage = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="group"
                       aria-label={isSelf ? t("selfDelete") : t("confirmDelete")}
                       disabled={isSelf}
                       title={isSelf ? t("selfDelete") : undefined}
                       onClick={() => setDeleting(user)}
                     >
-                      <Trash2 className="h-4 w-4 text-danger-600 dark:text-danger-500" />
+                      <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
                     </Button>
                   </div>
                 );
@@ -196,7 +210,10 @@ export const UsersPage = () => {
         onSearchChange={setSearch}
         searchPlaceholder={t("search")}
         actions={
-          <Button onClick={() => setDialogMode({ kind: "create" })}>
+          <Button
+            variant="gold"
+            onClick={() => setDialogMode({ kind: "create" })}
+          >
             <Plus className="h-4 w-4" />
             {t("createTitle")}
           </Button>
@@ -296,7 +313,7 @@ export const UsersPage = () => {
             lastName: dialogMode.user.lastName,
             email: dialogMode.user.email ?? "",
             phone: dialogMode.user.phone ?? "",
-            role: dialogMode.user.role,
+            role: assignableRole(dialogMode.user.role),
           }}
           onSubmit={handleEdit}
         >

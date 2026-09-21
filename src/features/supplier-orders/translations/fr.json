@@ -3,6 +3,15 @@
   "subtitle": "Réapprovisionnement auprès de vos fournisseurs",
   "listTitle": "Liste",
   "createTitle": "Nouvelle commande",
+  "createDescription": "Sélectionnez un fournisseur et les articles à commander.",
+  "createSubmit": "Créer la commande",
+  "createLinesHint": "Les prix et le total sont calculés par le serveur.",
+  "addLine": "Ajouter une ligne",
+  "removeLine": "Supprimer la ligne",
+  "selectSupplier": "Sélectionner un fournisseur",
+  "selectArticle": "Sélectionner un article",
+  "allStatuses": "Tous les statuts",
+  "statusFilter": "Filtrer par statut",
   "detailTitle": "Détail de la commande",
   "search": "Rechercher une commande…",
   "actions": "Actions",
@@ -25,6 +34,7 @@
   "linesCount_other": "{{count}} articles",
   "status": {
     "EN_ATTENTE": "En attente",
+    "RECUE_PARTIELLEMENT": "Reçue partiellement",
     "RECUE": "Reçue",
     "ANNULEE": "Annulée"
   },
@@ -37,6 +47,16 @@
   "toast": {
     "created": "Commande créée",
     "received": "Réception créée — stock mis à jour",
-    "cancelled": "Commande annulée"
+    "cancelled": "Commande annulée",
+    "receivedPartial": "Réception partielle enregistrée — stock mis à jour"
+  },
+  "reception": {
+    "cta": "Réception partielle",
+    "title": "Réception partielle",
+    "description": "Saisissez la quantité réellement reçue pour chaque ligne. Le stock n'est crédité que de ces quantités.",
+    "submit": "Enregistrer la réception",
+    "quantityLabel": "Reçu",
+    "lineSummary": "Commandé {{ordered}} · déjà reçu {{received}} · restant {{outstanding}}",
+    "total": "{{count}} article(s) à réceptionner"
   }
 }

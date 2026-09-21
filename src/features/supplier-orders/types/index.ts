@@ -5,15 +5,48 @@
  * DTOs; mapping happens in ../api/mappers.ts.
  *
  * Contract notes:
- *  - Status lifecycle differs from customer orders: EN_ATTENTE → RECUE
- *    (reception) or ANNULEE. `OrderStatusBadge` handles both lifecycles.
- *  - PUT /{id}/receptionner generates a stock *entry* per line; refused if
- *    the order was already received.
+ *  - Status lifecycle differs from customer orders:
+ *        EN_ATTENTE ──receptionner-partiel──▶ RECUE_PARTIELLEMENT
+ *                   ──receptionner─────────▶ RECUE
+ *                   ──annuler──────────────▶ ANNULEE
+ *    A partially received order can keep receiving until it is complete.
+ *  - PUT /{id}/receptionner generates a stock *entry* per line for the full
+ *    ordered quantity; refused if the order was already fully received.
+ *  - PUT /{id}/receptionner-partiel takes the quantity actually received per
+ *    line, so a short delivery does not inflate stock.
  *  - Lines are server-priced — the request sends only { articleId, quantite }.
  *  - No delete endpoint; cancellation is the terminal flow.
  */
 
-export type SupplierOrderStatus = "EN_ATTENTE" | "RECUE" | "ANNULEE";
+export type SupplierOrderStatus =
+  "EN_ATTENTE" | "RECUE_PARTIELLEMENT" | "RECUE" | "ANNULEE";
+
+/** Which actions each status allows, per the lifecycle above. */
+export const SUPPLIER_ORDER_TRANSITIONS: Record<
+  SupplierOrderStatus,
+  { receive: boolean; receivePartial: boolean; cancel: boolean }
+> = {
+  EN_ATTENTE: { receive: true, receivePartial: true, cancel: true },
+  RECUE_PARTIELLEMENT: { receive: true, receivePartial: true, cancel: false },
+  RECUE: { receive: false, receivePartial: false, cancel: false },
+  ANNULEE: { receive: false, receivePartial: false, cancel: false },
+};
+
+/** Body of PUT /{id}/receptionner-partiel — swagger `ReceptionPartielleDTO`. */
+export interface ReceptionPartielleDTO {
+  lignes: LigneRecueDTO[];
+}
+
+/** One received line — `quantiteRecue` is optional in the contract (min 0). */
+export interface LigneRecueDTO {
+  ligneId: number;
+  quantiteRecue?: number;
+}
+
+/** Client-side input for a partial reception. */
+export type PartialReceptionWrite = {
+  lines: Array<{ lineId: string; receivedQuantity: number }>;
+};
 
 /** Body of POST /api/commandes-fournisseur — swagger `CommandeFournisseurRequestDTO`. */
 export interface CommandeFournisseurRequestDTO {
@@ -44,6 +77,8 @@ export interface LigneCommandeFournisseurResponseDTO {
   articleId: number;
   articleDesignation: string;
   quantite: number;
+  /** Cumulative quantity already received for this line (partial receptions). */
+  quantiteRecue?: number;
   prixUnitaire: number;
   sousTotal: number;
 }
@@ -69,6 +104,8 @@ export type SupplierOrderLine = {
   articleId: string;
   articleDesignation: string;
   quantity: number;
+  /** Already received; 0 until a reception happens. */
+  receivedQuantity: number;
   unitPrice: number;
   subTotal: number;
 };

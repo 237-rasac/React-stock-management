@@ -1,13 +1,15 @@
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { toDashboardKpis } from "./mappers";
+import { toDashboardGraphs, toDashboardKpis } from "./mappers";
 import { ArticlesApi } from "@/features/articles/api";
 import { SalesApi } from "@/features/sales/api";
 import type {
   CategoryStockValue,
   DashboardCharts,
+  DashboardGraphs,
   DashboardKpis,
   DashboardKpisDTO,
+  GraphiquesResponseDTO,
   SalesByDayPoint,
 } from "../types";
 import type { Article } from "@/features/articles/types";
@@ -81,7 +83,20 @@ export const DashboardApi = {
   },
 
   /**
-   * NOTE — swagger v1.0 has NO /dashboard/charts endpoint (verified against
+   * GET /api/dashboard/graphiques — server-computed series: stock entries vs
+   * exits per day, and the best-selling articles. Distinct from getCharts()
+   * below, which derives revenue-per-day and stock-value-per-category
+   * client-side because the contract exposes neither.
+   */
+  getGraphs: async (locale?: string): Promise<DashboardGraphs> => {
+    const res = await apiClient.get<GraphiquesResponseDTO>(
+      API_ENDPOINTS.DASHBOARD_CHARTS,
+    );
+    return toDashboardGraphs(res.data, locale);
+  },
+
+  /**
+   * NOTE — swagger exposes no /dashboard/charts endpoint (verified against
    * the live backend too: the path would be a guaranteed 404). The two
    * dashboard charts are therefore composed client-side from REAL list
    * endpoints: sales for the 7-day series, articles for the stock-value

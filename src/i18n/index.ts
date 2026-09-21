@@ -65,6 +65,7 @@ i18n.use(initReactI18next).init({
     "common",
     "auth",
     "dashboard",
+    "platform",
     "articles",
     "customers",
     "suppliers",

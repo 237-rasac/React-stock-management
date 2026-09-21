@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toLocationDefaults } from "@/lib/countries";
 import {
   DataTable,
   DataTableToolbar,
@@ -95,10 +96,11 @@ export const CustomersPage = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="group"
                     aria-label={t("confirmDelete")}
                     onClick={() => setDeleting(info.row.original)}
                   >
-                    <Trash2 className="h-4 w-4 text-danger-600 dark:text-danger-500" />
+                    <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
                   </Button>
                 </div>
               ),
@@ -137,6 +139,7 @@ export const CustomersPage = () => {
         actions={
           canManage && (
             <Button
+              variant="gold"
               onClick={() => {
                 setEditing(null);
                 setDialogOpen(true);
@@ -174,9 +177,8 @@ export const CustomersPage = () => {
                 addressLine2: editing.addressLine2 ?? "",
                 city: editing.city ?? "",
                 postalCode: editing.postalCode ?? "",
-                country: editing.country ?? "",
+                ...toLocationDefaults(editing.country, editing.phone),
                 email: editing.email ?? "",
-                phone: editing.phone ?? "",
                 photo: editing.photo ?? "",
               }
             : { lastName: "", firstName: "" }

@@ -16,5 +16,19 @@
     "react/jsx-no-constructed-context-values": "off",
     "react/exhaustive-effect-dependencies": "off",
     "oxc/no-map-spread": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/api/client.ts"],
+      "rules": {
+        "eslint/no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["src/components/forms/LocationFields.tsx"],
+      "rules": {
+        "react/refs": "off"
+      }
+    }
+  ]
 }

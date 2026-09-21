@@ -38,5 +38,18 @@
     "empty": "No alerts — every article is above its threshold.",
     "critical": "Critical",
     "low": "Low stock"
-  }
+  },
+  "stockFlow": {
+    "title": "Stock in / out",
+    "empty": "No stock movement over the period.",
+    "entries": "In",
+    "exits": "Out"
+  },
+  "topArticles": {
+    "title": "Best sellers",
+    "empty": "No sale recorded yet.",
+    "sold": "{{formatted}} sold"
+  },
+  "subtitle": "Real-time overview of your activity.",
+  "subtitleFor": "Real-time overview of {{company}}'s activity."
 }

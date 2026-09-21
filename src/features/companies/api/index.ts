@@ -1,7 +1,16 @@
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { toCompany, toEntrepriseRequest } from "./mappers";
-import type { Company, CompanyWrite, EntrepriseResponseDTO } from "../types";
+import {
+  toCompany,
+  toEntrepriseRequest,
+  toEntrepriseUpdateRequest,
+} from "./mappers";
+import type {
+  Company,
+  CompanyContactWrite,
+  CompanyWrite,
+  EntrepriseResponseDTO,
+} from "../types";
 
 /**
  * Companies API — pinned to swagger.json (backend resource: «entreprises»):
@@ -31,6 +40,8 @@ export const CompaniesApi = {
     return toCompany(res.data);
   },
 
+  /** Creates a company WITHOUT an admin account — platform onboarding
+   * (features/platform) is the flow that creates both in one transaction. */
   create: async (data: CompanyWrite): Promise<Company> => {
     const res = await apiClient.post<EntrepriseResponseDTO>(
       API_ENDPOINTS.COMPANIES,
@@ -39,10 +50,15 @@ export const CompaniesApi = {
     return toCompany(res.data);
   },
 
-  update: async (id: string, data: CompanyWrite): Promise<Company> => {
+  /**
+   * PUT /api/entreprises/{id} — contact details only. Swagger is explicit
+   * that the name is the tenant partitioning key and is not editable, so the
+   * body is an `EntrepriseUpdateDTO` and never carries `nom`.
+   */
+  update: async (id: string, data: CompanyContactWrite): Promise<Company> => {
     const res = await apiClient.put<EntrepriseResponseDTO>(
       API_ENDPOINTS.COMPANY(id),
-      toEntrepriseRequest(data),
+      toEntrepriseUpdateRequest(data),
     );
     return toCompany(res.data);
   },
