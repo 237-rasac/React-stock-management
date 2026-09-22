@@ -5,6 +5,14 @@
   "createTitle": "Nouvelle entreprise",
   "editTitle": "Modifier l'entreprise",
   "detailTitle": "Détails",
+  "notFound": "Entreprise introuvable",
+  "notFoundHint": "Elle a peut-être été supprimée.",
+  "backToList": "Retour aux entreprises",
+  "detail": {
+    "identity": "Informations de l'entreprise",
+    "summary": "Résumé",
+    "clientCompany": "Entreprise cliente"
+  },
   "search": "Rechercher",
   "filter": "Filtrer",
   "actions": "Actions",

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import {
   DataTable,
   DataTableToolbar,
@@ -56,6 +57,7 @@ type DialogMode =
  */
 export const UsersPage = () => {
   const { t } = useTranslation("users");
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
@@ -101,6 +103,7 @@ export const UsersPage = () => {
           info.getValue() ? (
             <a
               href={`mailto:${info.getValue()}`}
+              onClick={(event) => event.stopPropagation()}
               className="text-primary hover:underline"
             >
               {info.getValue()}
@@ -129,10 +132,13 @@ export const UsersPage = () => {
                 return (
                   <div className="flex justify-end gap-1">
                     <Button
-                      variant="ghost"
+                      variant="edit"
                       size="icon"
                       aria-label={t("editTitle")}
-                      onClick={() => setDialogMode({ kind: "edit", user })}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDialogMode({ kind: "edit", user });
+                      }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -143,7 +149,10 @@ export const UsersPage = () => {
                       aria-label={isSelf ? t("selfDelete") : t("confirmDelete")}
                       disabled={isSelf}
                       title={isSelf ? t("selfDelete") : undefined}
-                      onClick={() => setDeleting(user)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDeleting(user);
+                      }}
                     >
                       <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
                     </Button>
@@ -225,6 +234,7 @@ export const UsersPage = () => {
         columns={columns}
         isLoading={listQuery.isLoading}
         globalFilter={search}
+        onRowClick={(user) => navigate(`/users/${user.id}`)}
       />
 
       {/* Create dialog — register contract: login + password required */}

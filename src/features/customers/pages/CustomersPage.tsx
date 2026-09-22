@@ -38,6 +38,8 @@ export const CustomersPage = () => {
   const [deleting, setDeleting] = useState<Customer | null>(null);
 
   const canManage = hasAnyRole(["ADMIN", "GESTIONNAIRE"]);
+  const canCreate = hasAnyRole(["ADMIN", "GESTIONNAIRE", "VENDEUR"]);
+  const canDelete = hasAnyRole(["ADMIN"]);
 
   const listQuery = useCustomers();
   const createCustomer = useCreateCustomer();
@@ -83,7 +85,7 @@ export const CustomersPage = () => {
               cell: (info) => (
                 <div className="flex justify-end gap-1">
                   <Button
-                    variant="ghost"
+                    variant="edit"
                     size="icon"
                     aria-label={t("editTitle")}
                     onClick={() => {
@@ -93,15 +95,17 @@ export const CustomersPage = () => {
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="group"
-                    aria-label={t("confirmDelete")}
-                    onClick={() => setDeleting(info.row.original)}
-                  >
-                    <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="group"
+                      aria-label={t("confirmDelete")}
+                      onClick={() => setDeleting(info.row.original)}
+                    >
+                      <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
+                    </Button>
+                  )}
                 </div>
               ),
             }),
@@ -109,7 +113,7 @@ export const CustomersPage = () => {
         : []),
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t, canManage]);
+  }, [t, canManage, canDelete]);
 
   const handleSubmit = async (values: CustomersFormData) => {
     if (editing) {
@@ -137,7 +141,7 @@ export const CustomersPage = () => {
         onSearchChange={setSearch}
         searchPlaceholder={t("search")}
         actions={
-          canManage && (
+          canCreate && (
             <Button
               variant="gold"
               onClick={() => {

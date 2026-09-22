@@ -30,6 +30,7 @@ export const Header = () => {
     "Utilisateur";
   const canManage =
     user?.roles?.includes("ADMIN") || user?.roles?.includes("GESTIONNAIRE");
+  const headerLabel = user?.companyName || fullName;
 
   // Global search and notifications both fan out to TENANT resources
   // (/articles, /clients, /commandes-*, /notifications). A SUPER_ADMIN
@@ -74,9 +75,11 @@ export const Header = () => {
               className="flex items-center gap-2 rounded-[9px] p-1.5 transition-colors hover:bg-surface-hover"
               aria-haspopup="true"
             >
-              <Avatar name={fullName} size="sm" />
-              <span className="hidden max-w-[160px] truncate text-[13px] font-medium text-content lg:block">
-                {fullName}
+              <Avatar name={headerLabel} size="sm" />
+              <span className="hidden max-w-[180px] min-w-0 text-left lg:block">
+                <span className="block truncate text-[13px] font-medium text-content">
+                  {headerLabel}
+                </span>
               </span>
               <ChevronDown
                 className="hidden h-4 w-4 text-content-muted sm:block"
@@ -92,6 +95,11 @@ export const Header = () => {
                 <p className="truncate text-xs text-content-muted">
                   {user?.email}
                 </p>
+                {user?.companyName && (
+                  <p className="mt-0.5 truncate text-xs font-medium text-accent-700 dark:text-accent-400">
+                    {user.companyName}
+                  </p>
+                )}
               </div>
 
               <button

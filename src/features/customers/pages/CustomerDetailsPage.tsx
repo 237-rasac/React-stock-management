@@ -86,7 +86,7 @@ export const CustomerDetailsPage = () => {
         title={`${customer.firstName} ${customer.lastName}`}
         actions={
           canManage ? (
-            <Button onClick={() => setEditOpen(true)}>
+            <Button variant="edit" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" />
               {t("editTitle")}
             </Button>

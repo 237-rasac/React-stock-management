@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import {
   DataTable,
@@ -34,7 +35,7 @@ import {
   type CompanyContactFormData,
 } from "@/features/companies/schemas";
 import type { Company } from "@/features/companies/types";
-import { OnboardCompanyDialog } from "../components/OnboardCompanyDialog";
+import { langPath } from "@/lib/lang-path";
 
 /**
  * «Entreprises clientes» — the SUPER_ADMIN's tenant list.
@@ -50,9 +51,9 @@ import { OnboardCompanyDialog } from "../components/OnboardCompanyDialog";
  */
 export const PlatformCompaniesPage = () => {
   const { t, i18n } = useTranslation("platform");
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
-  const [onboardOpen, setOnboardOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const [deleting, setDeleting] = useState<Company | null>(null);
 
@@ -90,6 +91,7 @@ export const PlatformCompaniesPage = () => {
           info.getValue() ? (
             <a
               href={`mailto:${info.getValue()}`}
+              onClick={(event) => event.stopPropagation()}
               className="text-primary hover:underline"
             >
               {info.getValue()}
@@ -116,10 +118,13 @@ export const PlatformCompaniesPage = () => {
         cell: (info) => (
           <div className="flex justify-end gap-1">
             <Button
-              variant="ghost"
+              variant="edit"
               size="icon"
               aria-label={t("edit.title")}
-              onClick={() => setEditing(info.row.original)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setEditing(info.row.original);
+              }}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -128,7 +133,10 @@ export const PlatformCompaniesPage = () => {
               size="icon"
               className="group"
               aria-label={t("delete.confirm")}
-              onClick={() => setDeleting(info.row.original)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeleting(info.row.original);
+              }}
             >
               <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
             </Button>
@@ -150,7 +158,6 @@ export const PlatformCompaniesPage = () => {
     return {
       addressLine1: company.addressLine1 ?? "",
       addressLine2: company.addressLine2 ?? "",
-      postalCode: company.postalCode ?? "",
       country: isoCode,
       city: company.city ?? "",
       email: company.email ?? "",
@@ -201,7 +208,10 @@ export const PlatformCompaniesPage = () => {
         onSearchChange={setSearch}
         searchPlaceholder={t("companies.searchPlaceholder")}
         actions={
-          <Button variant="gold" onClick={() => setOnboardOpen(true)}>
+          <Button
+            variant="gold"
+            onClick={() => navigate(langPath("/platform/onboard"))}
+          >
             <Plus className="h-4 w-4" />
             {t("onboard.cta")}
           </Button>
@@ -213,12 +223,9 @@ export const PlatformCompaniesPage = () => {
         columns={columns}
         isLoading={listQuery.isLoading}
         globalFilter={search}
-      />
-
-      {/* Onboard: company + first ADMIN */}
-      <OnboardCompanyDialog
-        open={onboardOpen}
-        onClose={() => setOnboardOpen(false)}
+        onRowClick={(company) =>
+          navigate(langPath(`/platform/companies/${company.id}`))
+        }
       />
 
       {/* Edit: contact details only — the name is immutable server-side */}
@@ -257,19 +264,12 @@ export const PlatformCompaniesPage = () => {
                 label={t("fields.country")}
               />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  name="postalCode"
-                  control={control}
-                  label={t("fields.postalCode")}
-                />
-                <CityField
-                  name="city"
-                  countryFieldName="country"
-                  control={control}
-                  label={t("fields.city")}
-                />
-              </div>
+              <CityField
+                name="city"
+                countryFieldName="country"
+                control={control}
+                label={t("fields.city")}
+              />
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField

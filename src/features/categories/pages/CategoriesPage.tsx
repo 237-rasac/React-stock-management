@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import {
   DataTable,
   DataTableToolbar,
@@ -29,6 +30,7 @@ import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
  */
 export const CategoriesPage = () => {
   const { t } = useTranslation("categories");
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -36,6 +38,7 @@ export const CategoriesPage = () => {
   const [deleting, setDeleting] = useState<Category | null>(null);
 
   const canManage = hasAnyRole(["ADMIN", "GESTIONNAIRE"]);
+  const canDelete = hasAnyRole(["ADMIN"]);
 
   const listQuery = useCategories();
   const createCategory = useCreateCategory();
@@ -60,25 +63,31 @@ export const CategoriesPage = () => {
               cell: (info) => (
                 <div className="flex justify-end gap-1">
                   <Button
-                    variant="ghost"
+                    variant="edit"
                     size="icon"
                     aria-label={t("editTitle")}
-                    onClick={() => {
+                    onClick={(event) => {
+                      event.stopPropagation();
                       setEditing(info.row.original);
                       setDialogOpen(true);
                     }}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="group"
-                    aria-label={t("confirmDelete")}
-                    onClick={() => setDeleting(info.row.original)}
-                  >
-                    <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="group"
+                      aria-label={t("confirmDelete")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDeleting(info.row.original);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-content-secondary transition-colors group-hover:text-danger-600 dark:group-hover:text-danger-500" />
+                    </Button>
+                  )}
                 </div>
               ),
             }),
@@ -86,7 +95,7 @@ export const CategoriesPage = () => {
         : []),
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t, canManage]);
+  }, [t, canManage, canDelete]);
 
   const handleSubmit = async (values: CategoriesFormData) => {
     if (editing) {
@@ -134,6 +143,9 @@ export const CategoriesPage = () => {
         columns={columns}
         isLoading={listQuery.isLoading}
         globalFilter={search}
+        onRowClick={(category) =>
+          navigate(`/catalog/categories/${category.id}`)
+        }
         emptyMessage={t("noResults", { defaultValue: "Aucun résultat" })}
         emptyState={
           !listQuery.isLoading && search === "" ? (

@@ -89,7 +89,7 @@ export function BadgeCell({ label, variant = "default" }: BadgeCellProps) {
 /** Row-actions cell — renders the actions menu trigger; menu items come from `actions`. */
 export function ActionsCell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-center">
       <Button
         variant="ghost"
         size="icon"

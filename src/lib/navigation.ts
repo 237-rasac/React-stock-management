@@ -67,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: "navCategories",
         href: "/catalog/categories",
         icon: Tag,
-        roles: ["ADMIN", "GESTIONNAIRE"],
+        roles: ["ADMIN", "GESTIONNAIRE", "VENDEUR"],
       },
       {
         key: "articles",
@@ -106,6 +106,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: "navSuppliers",
         href: "/suppliers",
         icon: Truck,
+        roles: ["ADMIN", "GESTIONNAIRE"],
       },
     ],
   },

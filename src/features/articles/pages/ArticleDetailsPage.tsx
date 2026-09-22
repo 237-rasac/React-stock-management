@@ -103,7 +103,7 @@ export const ArticleDetailsPage = () => {
         code={article.code}
         actions={
           canManage ? (
-            <Button onClick={() => setEditOpen(true)}>
+            <Button variant="edit" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" />
               {t("editTitle")}
             </Button>

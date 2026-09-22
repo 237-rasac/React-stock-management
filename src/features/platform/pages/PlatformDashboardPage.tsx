@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
@@ -21,7 +20,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { CURRENCY } from "@/lib/constants";
 import { langPath } from "@/lib/lang-path";
 import { usePlatformStats } from "../hooks";
-import { OnboardCompanyDialog } from "../components/OnboardCompanyDialog";
 import type { RecentCompany } from "../types";
 
 /**
@@ -127,7 +125,7 @@ function HealthRow({
 
 export const PlatformDashboardPage = () => {
   const { t } = useTranslation("platform");
-  const [onboardOpen, setOnboardOpen] = useState(false);
+  const navigate = useNavigate();
   const { data, isPending, isError, refetch } = usePlatformStats();
 
   if (isError) {
@@ -159,7 +157,8 @@ export const PlatformDashboardPage = () => {
         </div>
 
         <Button
-          onClick={() => setOnboardOpen(true)}
+          variant="gold"
+          onClick={() => navigate(langPath("/platform/onboard"))}
           className="shrink-0 self-start"
         >
           <Plus className="h-4 w-4" />
@@ -275,11 +274,6 @@ export const PlatformDashboardPage = () => {
           )}
         </div>
       </div>
-
-      <OnboardCompanyDialog
-        open={onboardOpen}
-        onClose={() => setOnboardOpen(false)}
-      />
     </div>
   );
 };

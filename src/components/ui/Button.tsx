@@ -2,7 +2,15 @@ import { forwardRef, ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "gold";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "outline"
+    | "ghost"
+    | "danger"
+    | "gold"
+    | "edit"
+    | "form";
   size?: "sm" | "md" | "lg" | "icon";
   loading?: boolean;
 }
@@ -21,20 +29,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+      "inline-flex items-center justify-center font-medium rounded-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
 
     const variants = {
-      primary:
-        "bg-primary text-white hover:bg-primary-hover focus:ring-primary",
-      secondary:
-        "bg-surface-alt text-content hover:bg-surface-hover focus:ring-primary",
+      primary: "bg-primary text-white hover:bg-primary-hover",
+      secondary: "bg-surface-alt text-content hover:bg-surface-hover",
       outline:
-        "border border-border-strong bg-transparent text-content hover:bg-surface-hover focus:ring-primary",
-      ghost:
-        "bg-transparent text-content hover:bg-surface-hover focus:ring-primary",
-      danger:
-        "bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500",
-      gold: "bg-gradient-to-br from-accent-400 to-accent-600 text-primary-950 shadow-[0_4px_14px_rgba(201,146,46,0.28)] hover:brightness-105 focus:ring-accent-500",
+        "border border-border-strong bg-transparent text-content hover:bg-surface-hover",
+      ghost: "bg-transparent text-content hover:bg-surface-hover",
+      danger: "bg-danger-600 text-white hover:bg-danger-700",
+      gold: "bg-gradient-to-br from-accent-400 to-accent-600 text-primary-950 shadow-[0_4px_14px_rgba(201,146,46,0.28)] hover:brightness-105",
+      edit: "bg-transparent text-content-secondary hover:bg-accent-100 hover:text-accent-700 dark:hover:bg-accent-500/15 dark:hover:text-accent-400",
+      form: "bg-primary-950 text-white hover:bg-primary-900",
     };
 
     const sizes = {

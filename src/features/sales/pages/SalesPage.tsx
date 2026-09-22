@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   DataTable,
   DataTableToolbar,
@@ -9,29 +9,20 @@ import {
   CurrencyCell,
 } from "@/components/data-table";
 import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
 import type { Sale } from "../types";
 import { useSales } from "../hooks";
 import { PosCheckoutDialog } from "../components/PosCheckoutDialog";
 import { hasAnyRole } from "@/lib/permissions";
 import { ShoppingCart } from "lucide-react";
 
-/**
- * SalesPage (P5.4) — sale history + the POS checkout:
- *  - list: code (mono), date-time, customer (or walk-in), line count, total
- *  - details drawer: sold line items with server-priced lines and the total
- *  - POS dialog (GESTIONNAIRE+; VENDEUR's primary screen): cart lines with
- *    live stock/prices → POST /api/ventes (stock decremented server-side)
- */
+/** Sales history and POS checkout. Rows navigate to the sale detail page. */
 export const SalesPage = () => {
   const { t } = useTranslation("sales");
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [posOpen, setPosOpen] = useState(false);
-  const [viewing, setViewing] = useState<Sale | null>(null);
-
   const canSell = hasAnyRole(["ADMIN", "GESTIONNAIRE", "VENDEUR"]);
-
   const listQuery = useSales();
 
   const columns = useMemo(() => {
@@ -43,7 +34,10 @@ export const SalesPage = () => {
           <button
             type="button"
             className="font-mono text-sm text-primary hover:underline"
-            onClick={() => setViewing(info.row.original)}
+            onClick={(event) => {
+              event.stopPropagation();
+              navigate(`/sales/${info.row.original.id}`);
+            }}
           >
             {info.getValue()}
           </button>
@@ -62,6 +56,7 @@ export const SalesPage = () => {
               <Link
                 to={`/customers/${sale.customerId}`}
                 className="text-content hover:text-primary hover:underline"
+                onClick={(event) => event.stopPropagation()}
               >
                 {sale.customerName}
               </Link>
@@ -108,85 +103,10 @@ export const SalesPage = () => {
         columns={columns}
         isLoading={listQuery.isLoading}
         globalFilter={search}
+        onRowClick={(sale) => navigate(`/sales/${sale.id}`)}
       />
 
-      {/* Sale details drawer */}
-      <SaleDrawer sale={viewing} onClose={() => setViewing(null)} />
-
-      {/* POS checkout */}
       <PosCheckoutDialog open={posOpen} onClose={() => setPosOpen(false)} />
     </div>
   );
 };
-
-/** Details dialog with the sold line items (lines are server-priced). */
-function SaleDrawer({
-  sale,
-  onClose,
-}: {
-  sale: Sale | null;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation("sales");
-  if (!sale) return null;
-
-  return (
-    <Dialog
-      open={!!sale}
-      onOpenChange={(o) => !o && onClose()}
-      title={sale.code}
-    >
-      <div className="space-y-4 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-content-secondary">{t("fields.date")}</span>
-          <DateCell value={sale.date} withTime />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-content-secondary">{t("fields.customer")}</span>
-          {sale.customerId ? (
-            <Link
-              to={`/customers/${sale.customerId}`}
-              className="text-primary hover:underline"
-              onClick={onClose}
-            >
-              {sale.customerName}
-            </Link>
-          ) : (
-            <span className="text-content-muted">{t("anonymous")}</span>
-          )}
-        </div>
-
-        <div className="border-t border-border-strong pt-3 dark:border-[color:var(--dark-border)]">
-          <p className="mb-2 font-medium text-content">{t("linesCard")}</p>
-          <table className="w-full">
-            <tbody>
-              {sale.lines.map((line) => (
-                <tr
-                  key={line.id}
-                  className="border-b border-border/60 last:border-0 dark:border-[color:var(--dark-border)]/60"
-                >
-                  <td className="py-2 pr-2 text-content">
-                    {line.articleDesignation}
-                  </td>
-                  <td className="py-2 pr-2 text-right tabular-nums text-content-secondary">
-                    ×{line.quantity}
-                  </td>
-                  <td className="py-2 text-right font-medium tabular-nums text-content">
-                    <CurrencyCell value={line.subTotal} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border-strong pt-3 dark:border-[color:var(--dark-border)]">
-          <span className="text-content-secondary">{t("fields.total")}</span>
-          <span className="text-lg font-bold tabular-nums text-content">
-            <CurrencyCell value={sale.total} />
-          </span>
-        </div>
-      </div>
-    </Dialog>
-  );
-}

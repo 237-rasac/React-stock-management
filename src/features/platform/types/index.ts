@@ -26,7 +26,6 @@ export interface AdminEntrepriseRequestDTO {
   adresse1?: string;
   adresse2?: string;
   ville?: string;
-  codePostal?: string;
   pays?: string;
   mailEntreprise?: string;
   numTelEntreprise?: string;
@@ -34,7 +33,6 @@ export interface AdminEntrepriseRequestDTO {
   adminNom: string;
   adminLogin: string;
   adminMotDePasse: string;
-  adminMail?: string;
   adminNumTel?: string;
 }
 
@@ -50,7 +48,6 @@ export interface CompanyOnboarding {
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
-  postalCode?: string;
   /** ISO alpha-2 ("CM") — stable across UI languages, unlike a country name. */
   country?: string;
   companyEmail?: string;
@@ -60,7 +57,6 @@ export interface CompanyOnboarding {
   adminLastName: string;
   adminLogin: string;
   adminPassword: string;
-  adminEmail?: string;
   /** National digits; combined with `country` into E.164 by the mapper. */
   adminPhone?: string;
 }

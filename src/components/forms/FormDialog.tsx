@@ -52,10 +52,12 @@ interface FormDialogProps<TValues extends FieldValues> {
   onSubmit: (values: TValues) => Promise<unknown>;
   /** Submit label (default: i18n common.save). */
   submitLabel?: string;
-  /** Submit button color variant (default: primary). */
+  /** Submit button color variant (default: form/sidebar color). */
   submitVariant?: ButtonProps["variant"];
   /** Forwarded to the Dialog panel — e.g. "max-w-2xl" for a wide form. */
   className?: string;
+  /** Optional custom footer for multi-step forms. */
+  renderFooter?: (form: UseFormReturn<TValues>) => React.ReactNode;
   children: (form: UseFormReturn<TValues>) => React.ReactNode;
 }
 
@@ -68,8 +70,9 @@ export function FormDialog<TValues extends FieldValues>({
   defaultValues,
   onSubmit,
   submitLabel,
-  submitVariant = "primary",
+  submitVariant = "gold",
   className,
+  renderFooter,
   children,
 }: FormDialogProps<TValues>) {
   const { t } = useTranslation("common");
@@ -127,18 +130,22 @@ export function FormDialog<TValues extends FieldValues>({
           >
             {children(form)}
           </fieldset>
-          <div className="mt-6 flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t("cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant={submitVariant}
-              loading={form.formState.isSubmitting}
-            >
-              {submitLabel ?? t("save")}
-            </Button>
-          </div>
+          {renderFooter ? (
+            renderFooter(form)
+          ) : (
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                variant={submitVariant}
+                loading={form.formState.isSubmitting}
+              >
+                {submitLabel ?? t("save")}
+              </Button>
+            </div>
+          )}
         </form>
       </FormProvider>
     </Dialog>

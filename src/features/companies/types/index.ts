@@ -87,4 +87,4 @@ export type CompanyWrite = {
 };
 
 /** Client-side write input for PUT — contact details only (no name). */
-export type CompanyContactWrite = Omit<CompanyWrite, "name">;
+export type CompanyContactWrite = Omit<CompanyWrite, "name" | "postalCode">;

@@ -79,7 +79,6 @@ export function toAdminEntrepriseRequest(
     adresse1: trimmed(input.addressLine1),
     adresse2: trimmed(input.addressLine2),
     ville: trimmed(input.city),
-    codePostal: trimmed(input.postalCode),
     pays: country,
     mailEntreprise: trimmed(input.companyEmail),
     numTelEntreprise: phone(input.companyPhone),
@@ -88,7 +87,6 @@ export function toAdminEntrepriseRequest(
     adminLogin: input.adminLogin.trim(),
     // Never trimmed: leading/trailing spaces can be part of a password.
     adminMotDePasse: input.adminPassword,
-    adminMail: trimmed(input.adminEmail),
     adminNumTel: phone(input.adminPhone),
   };
 }

@@ -170,7 +170,7 @@ export function DataTable<TData extends RowData>({
         role="region"
         aria-label="Tableau de données"
       >
-        <table className="w-full min-w-max text-sm">
+        <table className="data-table w-full min-w-max text-sm">
           {!hideHeader && (
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -184,7 +184,11 @@ export function DataTable<TData extends RowData>({
                     return (
                       <th
                         key={header.id}
-                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-secondary"
+                        className={cn(
+                          "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-secondary",
+                          header.column.id === "actions" &&
+                            "table-actions text-center",
+                        )}
                         aria-sort={
                           sortDirection === "asc"
                             ? "ascending"
@@ -257,7 +261,14 @@ export function DataTable<TData extends RowData>({
                   tabIndex={onRowClick ? 0 : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 text-content">
+                    <td
+                      key={cell.id}
+                      className={cn(
+                        "px-4 py-3 text-content",
+                        cell.column.id === "actions" &&
+                          "table-actions text-center",
+                      )}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

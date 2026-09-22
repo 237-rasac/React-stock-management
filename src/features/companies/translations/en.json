@@ -5,6 +5,14 @@
   "createTitle": "New company",
   "editTitle": "Edit company",
   "detailTitle": "Details",
+  "notFound": "Company not found",
+  "notFoundHint": "It may have been deleted.",
+  "backToList": "Back to companies",
+  "detail": {
+    "identity": "Company information",
+    "summary": "Summary",
+    "clientCompany": "Client company"
+  },
   "search": "Search",
   "filter": "Filter",
   "actions": "Actions",

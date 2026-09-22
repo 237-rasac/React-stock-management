@@ -49,7 +49,6 @@ const onboardingShape = z.object({
     .max(100, "Le nom ne peut dépasser 100 caractères"),
   addressLine1: optionalText(255, "L’adresse"),
   addressLine2: optionalText(255, "L’adresse"),
-  postalCode: optionalText(20, "Le code postal"),
   /** ISO alpha-2; the country/phone/city controls all read and write this. */
   country: optionalText(2, "Le pays"),
   city: optionalText(100, "La ville"),
@@ -76,7 +75,6 @@ const onboardingShape = z.object({
     .string()
     .min(6, "Le mot de passe doit contenir au moins 6 caractères")
     .max(100, "Le mot de passe ne peut dépasser 100 caractères"),
-  adminEmail: optionalEmail,
   adminPhone: optionalPhone,
 });
 
@@ -114,7 +112,6 @@ export const EMPTY_ONBOARDING: CompanyOnboardingFormData = {
   companyName: "",
   addressLine1: "",
   addressLine2: "",
-  postalCode: "",
   country: DEFAULT_COUNTRY,
   city: "",
   companyEmail: "",
@@ -123,6 +120,5 @@ export const EMPTY_ONBOARDING: CompanyOnboardingFormData = {
   adminLastName: "",
   adminLogin: "",
   adminPassword: "",
-  adminEmail: "",
   adminPhone: "",
 };

@@ -26,7 +26,6 @@ const optionalText = (max: number, label: string) =>
 const contactShape = {
   addressLine1: optionalText(255, "L’adresse"),
   addressLine2: optionalText(255, "L’adresse"),
-  postalCode: optionalText(20, "Le code postal"),
   /** ISO alpha-2; the country/city/phone controls all read and write this. */
   country: optionalText(2, "Le pays"),
   city: optionalText(100, "La ville"),

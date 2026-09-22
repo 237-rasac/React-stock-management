@@ -71,6 +71,11 @@ const SalesPage = lazy(() =>
     default: m.SalesPage,
   })),
 );
+const SaleDetailsPage = lazy(() =>
+  import("@/features/sales/pages/SaleDetailsPage").then((m) => ({
+    default: m.SaleDetailsPage,
+  })),
+);
 const StockPage = lazy(() =>
   import("@/features/stock/pages/StockPage").then((m) => ({
     default: m.StockPage,
@@ -101,14 +106,34 @@ const PlatformCompaniesPage = lazy(() =>
     default: m.PlatformCompaniesPage,
   })),
 );
+const PlatformOnboardingPage = lazy(() =>
+  import("@/features/platform/pages/PlatformOnboardingPage").then((m) => ({
+    default: m.PlatformOnboardingPage,
+  })),
+);
+const PlatformCompanyDetailsPage = lazy(() =>
+  import("@/features/platform/pages/PlatformCompanyDetailsPage").then((m) => ({
+    default: m.PlatformCompanyDetailsPage,
+  })),
+);
 const UsersPage = lazy(() =>
   import("@/features/users/pages/UsersPage").then((m) => ({
     default: m.UsersPage,
   })),
 );
+const UserDetailsPage = lazy(() =>
+  import("@/features/users/pages/UserDetailsPage").then((m) => ({
+    default: m.UserDetailsPage,
+  })),
+);
 const CategoriesPage = lazy(() =>
   import("@/features/categories/pages/CategoriesPage").then((m) => ({
     default: m.CategoriesPage,
+  })),
+);
+const CategoryDetailsPage = lazy(() =>
+  import("@/features/categories/pages/CategoryDetailsPage").then((m) => ({
+    default: m.CategoryDetailsPage,
   })),
 );
 const ProfilePage = lazy(() =>
@@ -217,8 +242,16 @@ export const router = createBrowserRouter([
                 children: [
                   { path: "platform", element: <PlatformDashboardPage /> },
                   {
+                    path: "platform/onboard",
+                    element: <PlatformOnboardingPage />,
+                  },
+                  {
                     path: "platform/companies",
                     element: <PlatformCompaniesPage />,
+                  },
+                  {
+                    path: "platform/companies/:id",
+                    element: <PlatformCompanyDetailsPage />,
                   },
                 ],
               },
@@ -232,16 +265,25 @@ export const router = createBrowserRouter([
                   { path: "dashboard", element: <DashboardPage /> },
                   {
                     element: <RoleRoute allowedRoles={["ADMIN"]} />,
-                    children: [{ path: "users", element: <UsersPage /> }],
+                    children: [
+                      { path: "users", element: <UsersPage /> },
+                      { path: "users/:id", element: <UserDetailsPage /> },
+                    ],
                   },
                   {
                     element: (
-                      <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]} />
+                      <RoleRoute
+                        allowedRoles={["ADMIN", "GESTIONNAIRE", "VENDEUR"]}
+                      />
                     ),
                     children: [
                       {
                         path: "catalog/categories",
                         element: <CategoriesPage />,
+                      },
+                      {
+                        path: "catalog/categories/:id",
+                        element: <CategoryDetailsPage />,
                       },
                     ],
                   },
@@ -252,8 +294,18 @@ export const router = createBrowserRouter([
                   },
                   { path: "customers", element: <CustomersPage /> },
                   { path: "customers/:id", element: <CustomerDetailsPage /> },
-                  { path: "suppliers", element: <SuppliersPage /> },
-                  { path: "suppliers/:id", element: <SupplierDetailsPage /> },
+                  {
+                    element: (
+                      <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]} />
+                    ),
+                    children: [
+                      { path: "suppliers", element: <SuppliersPage /> },
+                      {
+                        path: "suppliers/:id",
+                        element: <SupplierDetailsPage />,
+                      },
+                    ],
+                  },
                   { path: "customer-orders", element: <CustomerOrdersPage /> },
                   {
                     path: "customer-orders/:id",
@@ -265,6 +317,7 @@ export const router = createBrowserRouter([
                     element: <SupplierOrderDetailsPage />,
                   },
                   { path: "sales", element: <SalesPage /> },
+                  { path: "sales/:id", element: <SaleDetailsPage /> },
                   { path: "stock", element: <StockPage /> },
                   { path: "stock/movements", element: <StockMovementsPage /> },
                   { path: "stock/alerts", element: <StockAlertsPage /> },

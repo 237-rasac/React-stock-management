@@ -344,6 +344,15 @@
   }
 } /* end @layer base */
 
+/* Buttons keep focus after activation in some browsers. Remove the focus
+   ring/border from every button, including icon buttons and custom buttons,
+   so an action does not leave a white outline behind. */
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* =========================================================
    SIDEBAR — silent scrollbar (mockup §sidebar)
    The nav scrolls without any visible scrollbar at rest; a hairline 5px
@@ -894,6 +903,16 @@
 
 .data-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+/* Keep every action column centered, including page-specific icon wrappers. */
+.data-table th.table-actions,
+.data-table td.table-actions {
+  text-align: center;
+}
+
+.data-table td.table-actions > div {
+  justify-content: center !important;
 }
 
 /* =========================================================

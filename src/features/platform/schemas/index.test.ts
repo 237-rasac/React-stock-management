@@ -105,7 +105,6 @@ describe("onboarding payload mapper", () => {
     expect(dto.ville).toBeUndefined();
     expect(dto.mailEntreprise).toBeUndefined();
     expect(dto.numTelEntreprise).toBeUndefined();
-    expect(dto.adminMail).toBeUndefined();
   });
 
   it("composes E.164 numbers from the national part and the country", () => {

@@ -45,7 +45,6 @@ function toContactFields(input: CompanyContactWrite): EntrepriseUpdateDTO {
     adresse1: trimmed(input.addressLine1),
     adresse2: trimmed(input.addressLine2),
     ville: trimmed(input.city),
-    codePostal: trimmed(input.postalCode),
     pays: country,
     mail: trimmed(input.email),
     numTel: national ? toE164(national, country ?? DEFAULT_COUNTRY) : undefined,

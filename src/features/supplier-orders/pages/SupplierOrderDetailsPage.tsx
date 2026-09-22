@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { CurrencyCell, DateCell } from "@/components/data-table";
+import {
+  CurrencyCell,
+  DataTable,
+  DateCell,
+  createDataTableColumns,
+} from "@/components/data-table";
 import {
   useSupplierOrder,
   useReceiveSupplierOrder,
@@ -12,7 +17,7 @@ import {
 } from "../hooks";
 import { SupplierOrderStatusBadge } from "../components/SupplierOrderStatusBadge";
 import { PartialReceptionDialog } from "../components/PartialReceptionDialog";
-import { SUPPLIER_ORDER_TRANSITIONS } from "../types";
+import { SUPPLIER_ORDER_TRANSITIONS, type SupplierOrderLine } from "../types";
 import { ConfirmDialog } from "@/components/forms/ConfirmDialog";
 import { hasAnyRole } from "@/lib/permissions";
 import {
@@ -54,6 +59,40 @@ export const SupplierOrderDetailsPage = () => {
   const cancelOrder = useCancelSupplierOrder();
 
   const order = orderQuery.data;
+
+  const lineColumns = useMemo(() => {
+    const helper = createDataTableColumns<SupplierOrderLine>();
+    return [
+      helper.accessor("articleDesignation", {
+        header: t("fields.article"),
+        cell: (info) => (
+          <Link
+            to={`/catalog/articles/${info.row.original.articleId}`}
+            className="hover:text-primary hover:underline"
+          >
+            {info.getValue()}
+          </Link>
+        ),
+      }),
+      helper.accessor("quantity", {
+        header: t("fields.quantity"),
+        cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
+      }),
+      helper.accessor("unitPrice", {
+        header: t("fields.unitPrice"),
+        cell: (info) => <CurrencyCell value={info.getValue()} />,
+      }),
+      helper.accessor("subTotal", {
+        header: t("fields.subTotal"),
+        cell: (info) => (
+          <span className="font-medium">
+            <CurrencyCell value={info.getValue()} />
+          </span>
+        ),
+      }),
+    ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
 
   const handleConfirm = async () => {
     if (!order) return;
@@ -187,64 +226,17 @@ export const SupplierOrderDetailsPage = () => {
           </Badge>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border-strong text-left text-content-secondary dark:border-[color:var(--dark-border)]">
-                  <th className="pb-2 pr-4 font-medium">
-                    {t("fields.article")}
-                  </th>
-                  <th className="pb-2 pr-4 text-right font-medium">
-                    {t("fields.quantity")}
-                  </th>
-                  <th className="pb-2 pr-4 text-right font-medium">
-                    {t("fields.unitPrice")}
-                  </th>
-                  <th className="pb-2 text-right font-medium">
-                    {t("fields.subTotal")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.lines.map((line) => (
-                  <tr
-                    key={line.id}
-                    className="border-b border-border/60 last:border-0 dark:border-[color:var(--dark-border)]/60"
-                  >
-                    <td className="py-2.5 pr-4 text-content">
-                      <Link
-                        to={`/catalog/articles/${line.articleId}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {line.articleDesignation}
-                      </Link>
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums text-content">
-                      {line.quantity}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right text-content">
-                      <CurrencyCell value={line.unitPrice} />
-                    </td>
-                    <td className="py-2.5 text-right font-medium text-content">
-                      <CurrencyCell value={line.subTotal} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="pt-3 text-right text-content-secondary"
-                  >
-                    {t("fields.total")}
-                  </td>
-                  <td className="pt-3 text-right text-base font-bold text-content">
-                    <CurrencyCell value={order.total} />
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+          <DataTable<SupplierOrderLine>
+            data={order.lines}
+            columns={lineColumns}
+            showPagination={false}
+            emptyMessage={t("linesCard")}
+          />
+          <div className="mt-4 flex items-center justify-end gap-4 border-t border-border pt-4 text-sm dark:border-[color:var(--dark-border)]">
+            <span className="text-content-secondary">{t("fields.total")}</span>
+            <span className="text-base font-bold text-content">
+              <CurrencyCell value={order.total} />
+            </span>
           </div>
         </CardContent>
       </Card>

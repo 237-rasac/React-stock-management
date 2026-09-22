@@ -54,13 +54,34 @@ describe("permission helpers (reads the auth store)", () => {
     ).toBe(true);
   });
 
-  it("VENDEUR can sell but cannot manage articles", () => {
+  it("VENDEUR can read categories but cannot manage them or suppliers", () => {
     setUser(["VENDEUR"]);
     expect(hasPermission(PERMISSIONS.SALE_CREATE)).toBe(true);
+    expect(hasPermission(PERMISSIONS.ARTICLE_READ)).toBe(true);
+    expect(hasPermission(PERMISSIONS.SUPPLIER_READ)).toBe(false);
+    expect(hasPermission(PERMISSIONS.CATEGORY_READ)).toBe(true);
     expect(hasPermission(PERMISSIONS.ARTICLE_CREATE)).toBe(false);
     expect(
       hasAnyPermission([PERMISSIONS.ARTICLE_DELETE, PERMISSIONS.USER_CREATE]),
     ).toBe(false);
+  });
+
+  it("GESTIONNAIRE cannot access users or companies", () => {
+    setUser(["GESTIONNAIRE"]);
+    expect(hasPermission(PERMISSIONS.USER_READ)).toBe(false);
+    expect(hasPermission(PERMISSIONS.COMPANY_READ)).toBe(false);
+    expect(hasPermission(PERMISSIONS.ARTICLE_DELETE)).toBe(false);
+    expect(hasPermission(PERMISSIONS.CATEGORY_DELETE)).toBe(false);
+    expect(hasPermission(PERMISSIONS.CUSTOMER_DELETE)).toBe(false);
+    expect(hasPermission(PERMISSIONS.SUPPLIER_DELETE)).toBe(false);
+  });
+
+  it("VENDEUR can read and create customers but cannot edit or delete them", () => {
+    setUser(["VENDEUR"]);
+    expect(hasPermission(PERMISSIONS.CUSTOMER_READ)).toBe(true);
+    expect(hasPermission(PERMISSIONS.CUSTOMER_CREATE)).toBe(true);
+    expect(hasPermission(PERMISSIONS.CUSTOMER_UPDATE)).toBe(false);
+    expect(hasPermission(PERMISSIONS.CUSTOMER_DELETE)).toBe(false);
   });
 
   it("getPermissionsForRole returns a non-empty set per role and [] for unknown", () => {
